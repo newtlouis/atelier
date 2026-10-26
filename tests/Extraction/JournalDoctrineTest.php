@@ -96,11 +96,16 @@ final class CollecteurDAlertes extends \Psr\Log\AbstractLogger implements Logger
     /** @var list<string> */
     public array $avertissements = [];
 
-    /** @param array<array-key, mixed> $context */
+    /**
+     * @param mixed                   $level
+     * @param array<array-key, mixed> $context
+     */
     public function log($level, string|Stringable $message, array $context = []): void
     {
-        if (\in_array((string) $level, ['warning', 'error'], true)) {
-            $this->avertissements[] = (string) $message;
+        if (!\is_string($level) || !\in_array($level, ['warning', 'error'], true)) {
+            return;
         }
+
+        $this->avertissements[] = (string) $message;
     }
 }
