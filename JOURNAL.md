@@ -5,6 +5,34 @@ dans l'ordre chronologique inverse.
 
 ---
 
+## 2026-10-26 — Lot 1 (suite) : entités, numérotation, immuabilité
+
+**La numérotation des factures n'utilise pas de séquence PostgreSQL.** Une séquence ne
+revient jamais en arrière : si la transaction qui consomme le numéro 42 échoue, la suivante
+prend 43 et le 42 n'existe nulle part. C'est le comportement voulu pour une clé technique,
+et interdit pour une facture. À la place, une ligne par année dans `compteur_factures`,
+verrouillée en `SELECT … FOR UPDATE` dans la transaction qui écrit la facture : les deux
+réussissent ou échouent ensemble. Un test le prouve — une tentative de facturation refusée
+ne brûle pas le numéro 1.
+
+**L'immuabilité de la facture est gardée deux fois, et la première surprise est bonne :**
+toutes les propriétés sont `readonly`, et PHP 8.4 refuse la modification *même par
+réflexion*. L'écouteur Doctrine `FactureImmuable` devient donc une seconde barrière, celle
+qui tiendra le jour où quelqu'un retirera un `readonly` sans savoir pourquoi il était là.
+Il est testé séparément, puisqu'aucun test d'intégration ne peut plus l'atteindre.
+
+**Un refus métier ne doit pas fermer l'EntityManager.** Première version : le Facturier
+vérifiait l'état du devis *dans* la transaction. Un devis non accepté — cas courant — levait
+donc une exception à l'intérieur d'un `wrapInTransaction`, ce qui ferme l'EntityManager et
+rend la suite de la requête inutilisable. Corrigé : `verifieFacturable()` est appelé avant
+d'ouvrir la transaction, qui ne contient plus que ce qui doit être atomique. C'est le test
+qui a révélé le défaut, pas la relecture.
+
+**Nommage : règle posée** (voir README). Le métier en français, la technique en anglais,
+et aucun chemin à cheval — `Shared/Argent/Montant` est devenu `Shared/Montant`.
+
+---
+
 ## 2026-10-26 — Lot 1 (début) : l'argent et le chiffrage
 
 Le calcul du prix avant toute autre chose, et avant la moindre ligne d'IA. C'est ce qui
@@ -26,21 +54,23 @@ partagent rien, parce que les deux métiers ne se ressemblent pas : une table se
 un mur se pose. Le déplacement est offert dans un cas sous conditions, jamais dans l'autre.
 Forcer une abstraction commune aurait produit un calculateur à drapeaux illisible.
 
-### Hypothèses à confirmer avec Louis
+### Valeurs du barème — confirmées par Louis le 26/10/2026
 
-Elles sont codées comme telles et vérifiables en un coup d'œil dans
-`tests/Devis/Chiffrage/BaremeDeReference.php` :
+Les sept points ci-dessous étaient des hypothèses à la rédaction du chiffrage ; ils ont été
+validés tels quels le jour même. Ils restent listés parce que trois d'entre eux sont des
+valeurs que j'ai proposées faute d'information, et qu'il faudra les revoir au premier vrai
+chantier :
 
-| Point | Ce que j'ai retenu | Statut |
+| Point | Valeur retenue | Origine |
 |---|---|---|
-| Nuitées, 7 à 14 m² | 8 nuitées | **interprétation** de « +8 min » |
-| Nuitées, au-delà de 14 m² | 10 nuitées | déduit du maximum annoncé |
-| Coût d'une nuitée | 90 € | **jamais communiqué** |
-| Location utilitaire | 100 € la journée | **jamais communiqué** |
-| Tarif kilométrique | 0,70 €/km sur l'aller-retour | proposition |
-| Kilomètres sur un mur | facturés **en plus** de l'utilitaire | hypothèse |
-| Minimum de commande | sur le produit seul (table), sur le total (mur) | hypothèse |
-| Hauteur d'une table | n'influence pas le prix | à trancher |
+| Nuitées, 7 à 14 m² | 8 nuitées | interprétation de « +8 min », confirmée |
+| Nuitées, au-delà de 14 m² | 10 nuitées | déduit du maximum annoncé, confirmé |
+| Coût d'une nuitée | 90 € | **proposée par défaut** — à revoir sur facture réelle |
+| Location utilitaire | 100 € la journée | **proposée par défaut** — à revoir sur facture réelle |
+| Tarif kilométrique | 0,70 €/km sur l'aller-retour | proposée par défaut |
+| Kilomètres sur un mur | facturés **en plus** de l'utilitaire | confirmée |
+| Minimum de commande | sur le produit seul (table), sur le total (mur) | confirmée |
+| Hauteur d'une table | n'influence pas le prix | confirmée : la hauteur n'entre pas dans le prix |
 
 ### Une question ouverte, pas technique
 

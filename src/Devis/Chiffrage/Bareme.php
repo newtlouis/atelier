@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Devis\Chiffrage;
 
-use App\Shared\Argent\Montant;
+use App\Shared\Montant;
 use InvalidArgumentException;
 
 /**

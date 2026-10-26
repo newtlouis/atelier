@@ -9,3 +9,7 @@ parameters:
     tmpDir: var/phpstan
     symfony:
         containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+    doctrine:
+        # Sans cela, PHPStan signale les clés auto-générées comme « jamais
+        # assignées » : c'est l'ORM qui les écrit, par réflexion, après l'INSERT.
+        objectManagerLoader: tests/object-manager.php

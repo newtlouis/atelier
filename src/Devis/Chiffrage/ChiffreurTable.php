@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Devis\Chiffrage;
 
-use App\Shared\Argent\Montant;
-use App\Shared\Mesure\Surface;
+use App\Shared\Montant;
+use App\Shared\Surface;
 
 /**
  * Chiffre une table : la surface du plateau, puis la livraison.

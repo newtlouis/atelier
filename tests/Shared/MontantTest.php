@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Shared\Argent;
+namespace App\Tests\Shared;
 
-use App\Shared\Argent\Montant;
+use App\Shared\Montant;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

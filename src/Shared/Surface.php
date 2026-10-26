@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Shared\Mesure;
+namespace App\Shared;
 
 use InvalidArgumentException;
 

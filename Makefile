@@ -22,8 +22,10 @@ install: ## Installe les dépendances PHP
 	$(PHP) composer install --no-interaction
 
 test: ## Lance la suite de tests
-	# La configuration de test suffixe la base (atelier_test) : il faut la créer.
+	# La configuration de test suffixe la base (atelier_test) : il faut la créer
+	# puis la mettre au schéma courant avant de lancer quoi que ce soit.
 	$(PHP) php bin/console --env=test doctrine:database:create --if-not-exists -q
+	$(PHP) php bin/console --env=test doctrine:migrations:migrate --no-interaction -q
 	$(PHP) vendor/bin/phpunit
 
 qa: stan cs deptrac audit ## Lance toutes les vérifications de qualité

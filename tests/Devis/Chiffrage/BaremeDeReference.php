@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Devis\Chiffrage;
 
 use App\Devis\Chiffrage\Bareme;
-use App\Shared\Argent\Montant;
+use App\Shared\Montant;
 
 /**
  * Le barème réel de Louis Michel Design, au 26/10/2026.

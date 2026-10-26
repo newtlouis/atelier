@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Shared\Argent;
+namespace App\Shared;
 
 use InvalidArgumentException;
 use Stringable;
