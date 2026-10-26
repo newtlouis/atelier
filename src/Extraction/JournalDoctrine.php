@@ -41,7 +41,7 @@ final readonly class JournalDoctrine implements JournalDesAppels
         }
 
         try {
-            $this->em->persist(new AppelLlm($usage, $cout));
+            $this->em->persist(AppelLlm::depuis($usage, $cout));
             $this->em->flush();
         } catch (Throwable $e) {
             $this->logger->error("Trace d'appel au modèle non enregistrée", [

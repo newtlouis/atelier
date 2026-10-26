@@ -33,12 +33,17 @@ final class JournalDoctrineTest extends KernelTestCase
     {
         $this->journal()->enregistre($this->usage());
 
+        // clear() vide l'identity map : ce qui suit vient réellement de
+        // PostgreSQL, et prouve que Doctrine sait hydrater des propriétés
+        // publiques readonly promues.
+        $this->em->clear();
+
         $appels = $this->em->getRepository(AppelLlm::class)->findAll();
 
         self::assertCount(1, $appels);
-        self::assertSame(14_500_000, $appels[0]->coutNanoDollars());
-        self::assertSame('v1', $appels[0]->versionPrompt());
-        self::assertTrue($appels[0]->estUnSucces());
+        self::assertSame(14_500_000, $appels[0]->coutNanoDollars);
+        self::assertSame('v1', $appels[0]->versionPrompt);
+        self::assertTrue($appels[0]->succes);
     }
 
     public function testUnEchecEstTraceAuMemeTitreQuUnSucces(): void
@@ -48,12 +53,17 @@ final class JournalDoctrineTest extends KernelTestCase
             UsageAppel::echec('claude-opus-5', 'délai dépassé', latenceMs: 30_000),
         );
 
+        // clear() vide l'identity map : ce qui suit vient réellement de
+        // PostgreSQL, et prouve que Doctrine sait hydrater des propriétés
+        // publiques readonly promues.
+        $this->em->clear();
+
         $appels = $this->em->getRepository(AppelLlm::class)->findAll();
 
         self::assertCount(1, $appels);
-        self::assertFalse($appels[0]->estUnSucces());
-        self::assertSame('délai dépassé', $appels[0]->erreur());
-        self::assertSame(0, $appels[0]->coutNanoDollars());
+        self::assertFalse($appels[0]->succes);
+        self::assertSame('délai dépassé', $appels[0]->erreur);
+        self::assertSame(0, $appels[0]->coutNanoDollars);
     }
 
     public function testUnModeleNonTarifeEstTraceSansCoutEtSignale(): void
@@ -63,10 +73,15 @@ final class JournalDoctrineTest extends KernelTestCase
         new JournalDoctrine($this->em, new GrilleTarifaire(), $alertes)
             ->enregistre($this->usage(modele: 'claude-inexistant-9'));
 
+        // clear() vide l'identity map : ce qui suit vient réellement de
+        // PostgreSQL, et prouve que Doctrine sait hydrater des propriétés
+        // publiques readonly promues.
+        $this->em->clear();
+
         $appels = $this->em->getRepository(AppelLlm::class)->findAll();
 
         self::assertCount(1, $appels, "la trace est écrite même sans tarif connu");
-        self::assertSame(0, $appels[0]->coutNanoDollars());
+        self::assertSame(0, $appels[0]->coutNanoDollars);
         self::assertNotSame([], $alertes->avertissements);
     }
 
