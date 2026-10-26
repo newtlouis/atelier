@@ -24,6 +24,12 @@ deptrac:
       collectors:
         - type: directory
           value: src/Shared/.*
+    # La seule couche autorisée à connaître plusieurs domaines à la fois.
+    # L'orchestration est un rôle explicite, pas une entorse tolérée.
+    - name: Application
+      collectors:
+        - type: directory
+          value: src/Application/.*
     - name: Kernel
       collectors:
         - type: classNameRegex
@@ -48,7 +54,14 @@ deptrac:
       - Vendor
     Shared:
       - Vendor
+    Application:
+      - Devis
+      - Catalogue
+      - Extraction
+      - Shared
+      - Vendor
     Kernel:
+      - Application
       - Devis
       - Catalogue
       - Extraction
