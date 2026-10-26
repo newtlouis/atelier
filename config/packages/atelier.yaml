@@ -1,0 +1,16 @@
+# Le barème commercial. Changer un tarif se fait ici, sans toucher au code et
+# sans redéploiement applicatif. Les montants sont en centimes d'euro.
+parameters:
+    atelier.bareme:
+        # 1 800 € pour un plateau de 120 × 60 cm = 2 500 €/m².
+        prix_m2_plateau_centimes: 250000
+        prix_m2_mur_centimes: 45000
+        minimum_commande_centimes: 120000
+        seuil_livraison_offerte_centimes: 200000
+        distance_max_livraison_offerte_km: 1000
+        tarif_kilometrique_centimes: 70
+        cout_journee_camionnette_centimes: 10000
+        cout_nuitee_centimes: 9000
+        # 0 en franchise de TVA (auto-entrepreneur), 2000 pour 20 %.
+        taux_tva_centiemes: 0
+        mention_franchise_tva: 'TVA non applicable, art. 293 B du CGI'

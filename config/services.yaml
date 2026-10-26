@@ -21,3 +21,19 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # --- Chiffrage --------------------------------------------------------
+    App\Devis\Chiffrage\Bareme:
+        factory: ['App\Devis\Chiffrage\FabriqueDeBareme', 'creer']
+        arguments:
+            $configuration: '%atelier.bareme%'
+
+    # --- Extraction -------------------------------------------------------
+    # Les implémentations sont choisies ici, explicitement : le code ne
+    # dépend que des interfaces, et l'environnement décide laquelle sert.
+    App\Extraction\Extracteur: '@App\Extraction\ExtracteurClaude'
+    App\Extraction\JournalDesAppels: '@App\Extraction\JournalDoctrine'
+
+    Anthropic\Client:
+        arguments:
+            $apiKey: '%env(ANTHROPIC_API_KEY)%'
