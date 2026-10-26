@@ -5,6 +5,7 @@
 /public/bundles/
 /public/assets/
 .php-cs-fixer.cache
+.phpunit.cache/
 .phpunit.result.cache
 /phpstan.cache/
 .DS_Store
