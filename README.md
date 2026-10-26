@@ -1,5 +1,7 @@
 # atelier
 
+[![CI](https://github.com/newtlouis/atelier/actions/workflows/ci.yml/badge.svg)](https://github.com/newtlouis/atelier/actions/workflows/ci.yml)
+
 **Une demande client en texte libre devient un devis chiffré, traçable et auditable.**
 
 Back-office d'un atelier d'ébénisterie : un client décrit ce qu'il veut en quelques
