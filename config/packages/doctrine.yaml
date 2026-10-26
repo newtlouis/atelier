@@ -14,11 +14,14 @@ doctrine:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
         auto_mapping: true
         mappings:
+            # Les entités vivent dans leur domaine (src/Devis, src/Catalogue…),
+            # pas dans un src/Entity transversal : Doctrine scanne donc tout src/
+            # et ne retient que les classes portant l'attribut #[ORM\Entity].
             App:
                 type: attribute
                 is_bundle: false
-                dir: '%kernel.project_dir%/src/Entity'
-                prefix: 'App\Entity'
+                dir: '%kernel.project_dir%/src'
+                prefix: 'App'
                 alias: App
 
 when@test:

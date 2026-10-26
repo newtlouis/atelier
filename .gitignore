@@ -24,3 +24,7 @@
 
 # Caches des outils de qualité
 .deptrac.cache
+
+# Réglages personnels de l'éditeur
+.vscode/*
+!.vscode/settings.json
