@@ -28,3 +28,6 @@
 # Réglages personnels de l'éditeur
 .vscode/*
 !.vscode/settings.json
+
+# Rapports Infection
+/var/infection*.log

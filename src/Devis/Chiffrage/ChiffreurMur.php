@@ -46,7 +46,7 @@ final readonly class ChiffreurMur
         $chiffrage = new Chiffrage(
             $lignes,
             $this->bareme->tauxTvaCentiemes,
-            $this->bareme->estEnFranchiseDeTva() ? $this->bareme->mentionFranchiseTva : null,
+            $this->bareme->mentionAPorter(),
         );
 
         // Le minimum porte sur le total : un mur de 2 m² à 450 €/m² ne tient pas

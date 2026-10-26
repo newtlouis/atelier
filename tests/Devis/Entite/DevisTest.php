@@ -59,6 +59,14 @@ final class DevisTest extends TestCase
         $devis->envoyer();
     }
 
+    public function testOnNeRefusePasUnDevisQuiNAJamaisEteEnvoye(): void
+    {
+        $this->expectException(TransitionInterdite::class);
+        $this->expectExceptionMessage('Impossible de refuser un devis « brouillon » : il doit être « envoye ».');
+
+        $this->devis()->refuser();
+    }
+
     public function testUnDevisRefuseNePeutPlusEtreFacture(): void
     {
         $devis = $this->devis();

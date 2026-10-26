@@ -8,6 +8,7 @@ use App\Devis\Chiffrage\BaremeNuitees;
 use App\Devis\Chiffrage\ChiffreurMur;
 use App\Devis\Chiffrage\CommandeSousLeMinimum;
 use App\Devis\Chiffrage\DemandeMur;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -54,6 +55,39 @@ final class ChiffreurMurTest extends TestCase
         yield '13 m²' => [13, 8];
         yield '14 m², second palier' => [14, 10];
         yield '40 m²' => [40, 10];
+    }
+
+    public function testLesLibellesDecriventCeQuiEstFacture(): void
+    {
+        // Les libellés figurent tels quels sur le devis envoyé au client :
+        // ils sont aussi vérifiés que les montants.
+        $chiffrage = $this->chiffreur()->chiffre(
+            new DemandeMur(surfaceMetresCarres: 6, distanceKm: 200),
+        );
+
+        self::assertSame('Mur effet roche — 6 m² posés', $chiffrage->lignes[0]->libelle);
+        self::assertSame('Location utilitaire — 1 journée', $chiffrage->lignes[1]->libelle);
+        self::assertSame('Hébergement sur place — 5 nuitées', $chiffrage->lignes[2]->libelle);
+        self::assertSame('Déplacement — 400 km aller-retour', $chiffrage->lignes[3]->libelle);
+    }
+
+    public function testAssujettiUnMurPorteLaTvaEtPerdLaMentionDeFranchise(): void
+    {
+        $chiffreur = new ChiffreurMur(BaremeDeReference::creer(tauxTvaCentiemes: 2_000));
+
+        $chiffrage = $chiffreur->chiffre(new DemandeMur(surfaceMetresCarres: 6, distanceKm: 200));
+
+        self::assertSame(353_000, $chiffrage->totalHorsTaxes->centimes);
+        self::assertSame(70_600, $chiffrage->tva->centimes);
+        self::assertNull($chiffrage->mentionFranchiseTva);
+    }
+
+    public function testUneSurfaceNulleNEstPasUnChantier(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Surface invalide : 0 m².');
+
+        new DemandeMur(surfaceMetresCarres: 0, distanceKm: 10);
     }
 
     public function testUnTropPetitChantierEstRefuse(): void

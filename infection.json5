@@ -1,0 +1,29 @@
+{
+    // Le test de mutation ne mesure pas combien de code est exécuté par les
+    // tests, mais combien de modifications du code les tests détectent. C'est
+    // la seule mesure qui dit quelque chose sur la qualité d'une suite.
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src/Devis",
+            "src/Shared"
+        ],
+        "excludes": [
+            // Entités : muter un accesseur produit du bruit, pas de l'information.
+            "Devis/Entite"
+        ]
+    },
+    "logs": {
+        "text": "var/infection.log",
+        "summary": "var/infection-summary.log"
+    },
+    "mutators": {
+        "@default": true
+    },
+    // Le MSI atteint 100 % au 26/10/2026. Les seuils sont posés légèrement en
+    // dessous : viser 100 % en CI rendrait toute ligne défensive non testable
+    // bloquante, ce qui pousse à écrire des tests pour la machine plutôt que
+    // pour le métier.
+    "minMsi": 90,
+    "minCoveredMsi": 95
+}

@@ -46,7 +46,7 @@ final readonly class ChiffreurTable
         return new Chiffrage(
             $lignes,
             $this->bareme->tauxTvaCentiemes,
-            $this->bareme->estEnFranchiseDeTva() ? $this->bareme->mentionFranchiseTva : null,
+            $this->bareme->mentionAPorter(),
         );
     }
 

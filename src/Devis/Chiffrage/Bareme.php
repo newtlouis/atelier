@@ -53,4 +53,16 @@ final readonly class Bareme
     {
         return 0 === $this->tauxTvaCentiemes;
     }
+
+    /**
+     * La mention légale à porter sur le document, ou null s'il n'y en a pas.
+     *
+     * Vit ici plutôt que dans chaque calculateur : la règle est la même pour
+     * une table et pour un mur, et une règle dupliquée finit toujours par
+     * diverger.
+     */
+    public function mentionAPorter(): ?string
+    {
+        return $this->estEnFranchiseDeTva() ? $this->mentionFranchiseTva : null;
+    }
 }

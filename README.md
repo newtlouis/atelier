@@ -29,8 +29,19 @@ tournent dans les conteneurs.
 - PostgreSQL 16
 - PHPStan **niveau 10**
 - Deptrac : un domaine qui en appelle un autre fait échouer la CI
+- **Infection : MSI 100 %** — la suite détecte 203 mutations sur 203
 - PHP CS Fixer, `composer audit`
 - une CI qui lance **exactement** les commandes ci-dessus
+
+## Pourquoi le test de mutation plutôt que la couverture
+
+La couverture dit quelles lignes ont été exécutées, pas si quelqu'un regardait.
+Une suite peut couvrir 100 % du code sans rien affirmer.
+
+Infection modifie le code — remplace un `<=` par un `<`, inverse un ternaire,
+supprime un appel — et vérifie qu'un test proteste. Sur ce dépôt, il a trouvé
+sept trous invisibles à la couverture, dont une règle de TVA dupliquée entre
+deux calculateurs qui aurait fini par diverger. `make mutation` pour le relancer.
 
 ## L'architecture, en une ligne
 

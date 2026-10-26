@@ -5,6 +5,40 @@ dans l'ordre chronologique inverse.
 
 ---
 
+## 2026-10-26 — Lot 1 (fin) : ce qu'Infection a trouvé
+
+Première passe : **MSI 96 %**, 7 mutants survivants sur 201. Le chiffre n'est pas
+l'intéressant — les 7 survivants le sont. Six étaient de vrais trous :
+
+- les libellés des lignes d'un devis de mur n'étaient **jamais vérifiés**. On pouvait
+  écrire « 400 km » au lieu de « 200 km » sans qu'un test bronche, alors que ce texte
+  part chez le client ;
+- la TVA n'était testée que sur les tables, jamais sur les murs ;
+- une surface de 0 m² n'était pas éprouvée ;
+- **on pouvait refuser un devis jamais envoyé** : la garde existait, aucun test ne la
+  tenait ;
+- le point de santé ne testait pas son propre cas dégradé — supprimer l'appel à la base
+  le laissait répondre « ok » indéfiniment.
+
+Le septième était le plus instructif : inverser un ternaire sur la mention de TVA ne
+cassait rien, parce que le même ternaire existait **à l'identique dans les deux
+calculateurs**. Il est remonté dans `Bareme::mentionAPorter()`. Une duplication trouvée
+par un outil de test, pas par une relecture.
+
+Après correction : **203 mutants sur 203 tués, MSI 100 %**. Les seuils de la CI sont
+posés à 90 / 95 et non à 100 : exiger la perfection rendrait toute ligne défensive non
+testable bloquante, ce qui pousse à écrire des tests pour la machine plutôt que pour le
+métier.
+
+**Une dépendance retirée.** `symfony/workflow` avait été installé pour la machine à états,
+puis n'a jamais servi : les transitions sont gardées par les méthodes de l'entité
+(`envoyer()`, `accepter()`…), ce qui est plus fort qu'une configuration YAML — l'invariant
+vit avec la donnée qu'il protège, et aucun appelant ne peut l'ignorer. Garder le composant
+« au cas où » aurait ajouté une dépendance, une configuration et une façon concurrente de
+faire la même chose.
+
+---
+
 ## 2026-10-26 — Lot 1 (suite) : entités, numérotation, immuabilité
 
 **La numérotation des factures n'utilise pas de séquence PostgreSQL.** Une séquence ne

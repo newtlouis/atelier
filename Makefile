@@ -4,7 +4,7 @@ DC := docker compose
 PHP := $(DC) exec -T app
 
 .DEFAULT_GOAL := help
-.PHONY: help up down install test qa stan cs deptrac audit shell db-reset
+.PHONY: help up down install test qa stan cs deptrac audit mutation shell db-reset
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -29,6 +29,10 @@ test: ## Lance la suite de tests
 	$(PHP) vendor/bin/phpunit
 
 qa: stan cs deptrac audit ## Lance toutes les vérifications de qualité
+
+mutation: ## Test de mutation (Infection) — lent, lancé à la main et en CI
+	$(DC) exec -T -e XDEBUG_MODE=coverage app vendor/bin/infection \
+		--threads=max --no-progress --show-mutations
 
 stan: ## Analyse statique (PHPStan, niveau 10)
 	$(PHP) vendor/bin/phpstan analyse --memory-limit=512M

@@ -24,6 +24,9 @@ jobs:
       - name: Qualité (PHPStan niveau 10, style, dépendances, vulnérabilités)
         run: make qa
 
+      - name: Test de mutation (Infection, MSI minimum 90 %)
+        run: make mutation
+
       - name: Journaux en cas d'échec
         if: failure()
         run: docker compose logs --no-color
