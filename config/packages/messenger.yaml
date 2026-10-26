@@ -1,0 +1,40 @@
+framework:
+    messenger:
+        failure_transport: echecs
+
+        transports:
+            # Un appel à un modèle prend plusieurs secondes et peut échouer :
+            # il n'a rien à faire dans le cycle d'une requête HTTP.
+            extraction:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    queue_name: extraction
+                retry_strategy:
+                    # Trois tentatives espacées : une panne de l'API est
+                    # presque toujours transitoire. Au-delà, insister coûte
+                    # de l'argent sans rien résoudre.
+                    max_retries: 3
+                    delay: 2000
+                    multiplier: 3
+                    max_delay: 60000
+
+            # Ce qui a échoué trois fois est conservé, pas perdu : on peut
+            # l'inspecter (messenger:failed:show) et le rejouer une fois la
+            # cause corrigée.
+            echecs:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    queue_name: echecs
+
+        routing:
+            App\Application\ExtraireEtChiffrer: extraction
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                # En test, le message est traité immédiatement et dans le même
+                # processus : on vérifie le comportement du gestionnaire, pas
+                # celui de la file.
+                extraction: 'in-memory://'
+                echecs: 'in-memory://'
