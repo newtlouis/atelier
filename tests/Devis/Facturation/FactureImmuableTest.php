@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Devis\Facturation;
 
+use App\Devis\Chiffrage\ChiffreurTable;
+use App\Devis\Chiffrage\DemandeTable;
+use App\Devis\Entite\Demande;
+use App\Devis\Entite\Devis;
 use App\Devis\Entite\Facture;
 use App\Devis\Facturation\FactureImmuable;
+use App\Tests\Devis\Chiffrage\BaremeDeReference;
+use DateTimeImmutable;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use DomainException;
 use PHPUnit\Framework\TestCase;
@@ -21,8 +27,11 @@ final class FactureImmuableTest extends TestCase
 {
     public function testIlRefuseToutUpdateEtNommeLesChampsTouches(): void
     {
-        $facture = $this->createStub(Facture::class);
-        $facture->method('numero')->willReturn('FA-2026-0001');
+        $facture = Facture::emettre(
+            $this->devisAccepte(),
+            'FA-2026-0001',
+            new DateTimeImmutable('2026-03-15'),
+        );
 
         $event = $this->createStub(PreUpdateEventArgs::class);
         $event->method('getEntityChangeSet')->willReturn([
@@ -36,5 +45,18 @@ final class FactureImmuableTest extends TestCase
         );
 
         new FactureImmuable()->preUpdate($facture, $event);
+    }
+
+    private function devisAccepte(): Devis
+    {
+        $chiffrage = new ChiffreurTable(BaremeDeReference::creer())->chiffre(
+            new DemandeTable(longueurMm: 1_200, largeurMm: 600, hauteurMm: 350, distanceLivraisonKm: 100),
+        );
+
+        $devis = new Devis(new Demande('Une table basse effet roche, 120 × 60.'), $chiffrage);
+        $devis->envoyer();
+        $devis->accepter();
+
+        return $devis;
     }
 }

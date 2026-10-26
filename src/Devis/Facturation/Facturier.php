@@ -36,7 +36,7 @@ final readonly class Facturier
             function () use ($devis, $date): Facture {
                 $devis->marquerFacture();
 
-                $facture = new Facture(
+                $facture = Facture::emettre(
                     $devis,
                     $this->numeroteur->prochainNumero((int) $date->format('Y')),
                     $date,

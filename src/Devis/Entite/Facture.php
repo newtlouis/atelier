@@ -17,67 +17,56 @@ use Symfony\Component\Uid\Uuid;
  * l'informatique :
  *
  * 1. le numéro suit une séquence chronologique **sans trou** (art. 242 nonies A
- *    du CGI) — voir CompteurDeFactures pour la mécanique ;
- * 2. une fois émise, elle ne change plus. Pas de mutateur ici, et un écouteur
- *    Doctrine refuse tout UPDATE : une correction se fait par avoir, jamais en
- *    réécrivant l'original.
+ *    du CGI) — voir CompteurFactures pour la mécanique ;
+ * 2. une fois émise, elle ne change plus. Pas de mutateur, des propriétés en
+ *    lecture seule que PHP refuse de réécrire même par réflexion, et un
+ *    écouteur Doctrine qui rejette tout UPDATE. Une correction se fait par
+ *    avoir, jamais en réécrivant l'original.
  *
  * Les montants sont recopiés depuis le devis plutôt que lus par la relation :
- * si le devis était modifié ou supprimé, la facture doit rester lisible seule.
+ * si le devis était modifié, la facture doit rester lisible seule.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'facture')]
 class Facture
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'uuid', unique: true)]
-    private readonly Uuid $id;
+    private function __construct(
+        #[ORM\Id]
+        #[ORM\Column(type: 'uuid', unique: true)]
+        public readonly Uuid $id,
+        #[ORM\Column(length: 20, unique: true)]
+        public readonly string $numero,
+        #[ORM\ManyToOne(targetEntity: Devis::class)]
+        #[ORM\JoinColumn(nullable: false)]
+        public readonly Devis $devis,
+        #[ORM\Column(type: Types::INTEGER)]
+        private readonly int $totalHorsTaxesCentimes,
+        #[ORM\Column(type: Types::INTEGER)]
+        private readonly int $tvaCentimes,
+        #[ORM\Column(length: 120, nullable: true)]
+        public readonly ?string $mentionFranchiseTva,
+        #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+        public readonly DateTimeImmutable $emiseLe,
+    ) {}
 
-    #[ORM\Column(length: 20, unique: true)]
-    private readonly string $numero;
-
-    #[ORM\ManyToOne(targetEntity: Devis::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private readonly Devis $devis;
-
-    #[ORM\Column(type: Types::INTEGER)]
-    private readonly int $totalHorsTaxesCentimes;
-
-    #[ORM\Column(type: Types::INTEGER)]
-    private readonly int $tvaCentimes;
-
-    #[ORM\Column(length: 120, nullable: true)]
-    private readonly ?string $mentionFranchiseTva;
-
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    private readonly DateTimeImmutable $emiseLe;
-
-    public function __construct(Devis $devis, string $numero, DateTimeImmutable $emiseLe)
+    public static function emettre(Devis $devis, string $numero, DateTimeImmutable $emiseLe): self
     {
-        $this->id = Uuid::v7();
-        $this->numero = $numero;
-        $this->devis = $devis;
-        $this->totalHorsTaxesCentimes = $devis->totalHorsTaxes()->centimes;
-        $this->tvaCentimes = $devis->tva()->centimes;
-        $this->mentionFranchiseTva = $devis->mentionFranchiseTva();
-        $this->emiseLe = $emiseLe;
+        return new self(
+            id: Uuid::v7(),
+            numero: $numero,
+            devis: $devis,
+            totalHorsTaxesCentimes: $devis->totalHorsTaxes()->centimes,
+            tvaCentimes: $devis->tva()->centimes,
+            mentionFranchiseTva: $devis->mentionFranchiseTva(),
+            emiseLe: $emiseLe,
+        );
     }
 
-    public function id(): Uuid
-    {
-        return $this->id;
-    }
-
-    public function numero(): string
-    {
-        return $this->numero;
-    }
-
-    public function devis(): Devis
-    {
-        return $this->devis;
-    }
-
+    /**
+     * Les montants restent derrière un accesseur, contrairement au reste : la
+     * base stocke des centimes bruts, le domaine manipule des Montant. Exposer
+     * l'entier inviterait à faire de l'arithmétique dessus.
+     */
     public function totalHorsTaxes(): Montant
     {
         return Montant::enCentimes($this->totalHorsTaxesCentimes);
@@ -91,15 +80,5 @@ class Facture
     public function totalToutesTaxes(): Montant
     {
         return $this->totalHorsTaxes()->plus($this->tva());
-    }
-
-    public function mentionFranchiseTva(): ?string
-    {
-        return $this->mentionFranchiseTva;
-    }
-
-    public function emiseLe(): DateTimeImmutable
-    {
-        return $this->emiseLe;
     }
 }

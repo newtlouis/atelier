@@ -33,6 +33,22 @@ qui explique **pourquoi**, pas quoi — le diff dit déjà quoi.
 4. **Une facture émise ne change pas.** Correction par avoir.
 5. **Les outils exposés à un modèle restent en lecture seule.**
 
+## Entités : immuables ou à état, jamais entre les deux
+
+- **Une entité jamais modifiée après sa création** (`Demande`, `Facture`, `AppelLlm`)
+  expose des **propriétés publiques `readonly`**, promues dans un constructeur privé
+  avec une fabrique statique. Aucun accesseur : `readonly` garantit l'immuabilité au
+  niveau du langage, PHP refusant l'écriture même par réflexion. Doctrine hydrate sans
+  passer par le constructeur, donc il écrit une propriété encore non initialisée — ce
+  qui est autorisé.
+- **Une entité à état** (`Devis`, `CompteurFactures`) garde des propriétés **privées**
+  et expose des **méthodes qui nomment les transitions** (`envoyer()`, `accepter()`),
+  jamais de mutateurs. Un objet qui laisse écrire n'importe quel état n'est pas une
+  entité, c'est une structure de données.
+
+Exception unique : un montant stocké en centimes reste derrière un accesseur qui rend
+un `Montant`. Exposer l'entier inviterait à faire de l'arithmétique dessus.
+
 ## Nommage
 
 Le vocabulaire du métier en français (`Devis`, `Facture`, `Bareme`, `Montant`), la

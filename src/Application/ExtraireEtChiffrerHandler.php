@@ -60,26 +60,26 @@ final readonly class ExtraireEtChiffrerHandler
         if ($this->devis->existePourDemande($demande)) {
             // Idempotence : un message redélivré ne crée pas un second devis.
             $this->logger->info('Devis déjà établi, message ignoré', [
-                'demande' => (string) $demande->id(),
+                'demande' => (string) $demande->id,
             ]);
 
             return;
         }
 
-        $extraite = $this->extracteur->extrait($demande->texteClient());
+        $extraite = $this->extracteur->extrait($demande->texteClient);
 
         try {
             $chiffrage = $this->chiffreur->chiffre($extraite);
         } catch (DemandeIncomplete $e) {
             $this->logger->info('Demande incomplète, chiffrage suspendu', [
-                'demande' => (string) $demande->id(),
+                'demande' => (string) $demande->id,
                 'questions' => $e->getMessage(),
             ]);
 
             return;
         } catch (CommandeSousLeMinimum $e) {
             $this->logger->info('Commande sous le minimum', [
-                'demande' => (string) $demande->id(),
+                'demande' => (string) $demande->id,
                 'motif' => $e->getMessage(),
             ]);
 

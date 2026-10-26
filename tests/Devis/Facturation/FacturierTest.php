@@ -56,7 +56,7 @@ final class FacturierTest extends KernelTestCase
             $numeros[] = $this->facturier->emettre(
                 $this->devisAccepte(),
                 new DateTimeImmutable('2026-03-15'),
-            )->numero();
+            )->numero;
         }
 
         self::assertSame(['FA-2026-0001', 'FA-2026-0002', 'FA-2026-0003'], $numeros);
@@ -70,7 +70,7 @@ final class FacturierTest extends KernelTestCase
             new DateTimeImmutable('2027-01-02'),
         );
 
-        self::assertSame('FA-2027-0001', $deuxiemeAnnee->numero());
+        self::assertSame('FA-2027-0001', $deuxiemeAnnee->numero);
     }
 
     public function testUnDevisNonAccepteNEstPasFacturableEtNeConsommePasDeNumero(): void
@@ -96,7 +96,7 @@ final class FacturierTest extends KernelTestCase
             new DateTimeImmutable('2026-03-15'),
         );
 
-        self::assertSame('FA-2026-0001', $facture->numero());
+        self::assertSame('FA-2026-0001', $facture->numero);
     }
 
     public function testUneFactureEmiseNePeutPlusEtreModifiee(): void
@@ -128,7 +128,7 @@ final class FacturierTest extends KernelTestCase
 
         self::assertSame(194_000, $facture->totalHorsTaxes()->centimes);
         self::assertSame(0, $facture->tva()->centimes);
-        self::assertSame('TVA non applicable, art. 293 B du CGI', $facture->mentionFranchiseTva());
+        self::assertSame('TVA non applicable, art. 293 B du CGI', $facture->mentionFranchiseTva);
     }
 
     private function devisAccepte(): Devis

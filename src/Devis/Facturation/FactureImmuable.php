@@ -28,7 +28,7 @@ final readonly class FactureImmuable
         throw new DomainException(\sprintf(
             'La facture %s est émise : elle ne peut plus être modifiée (tentative sur : %s). '
             . 'Émettez un avoir.',
-            $facture->numero(),
+            $facture->numero,
             $champs,
         ));
     }

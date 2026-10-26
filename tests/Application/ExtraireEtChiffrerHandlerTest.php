@@ -48,7 +48,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
         $demande = $this->demandePersistee('Une table basse 120 × 60, hauteur 35, livrée à 100 km.');
 
         $this->handler(ExtracteurFactice::renvoyant($this->tableComplete()))(
-            new ExtraireEtChiffrer($demande->id()),
+            new ExtraireEtChiffrer($demande->id),
         );
 
         $devis = $this->em->getRepository(Devis::class)->findOneBy(['demande' => $demande]);
@@ -63,7 +63,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
         // Messenger peut redélivrer un message : c'est le cas normal d'une
         // file, pas une anomalie.
         $demande = $this->demandePersistee('Une table basse 120 × 60, hauteur 35, à 100 km.');
-        $message = new ExtraireEtChiffrer($demande->id());
+        $message = new ExtraireEtChiffrer($demande->id);
 
         $extracteur = ExtracteurFactice::renvoyant($this->tableComplete(), $this->tableComplete());
         $handler = $this->handler($extracteur);
@@ -93,7 +93,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
         // Ne lève pas : réessayer ne ferait pas apparaître une dimension que
         // le client n'a pas donnée.
         $this->handler(ExtracteurFactice::renvoyant($incomplete))(
-            new ExtraireEtChiffrer($demande->id()),
+            new ExtraireEtChiffrer($demande->id),
         );
 
         self::assertCount(0, $this->em->getRepository(Devis::class)->findAll());
@@ -107,7 +107,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
 
         $this->handler(ExtracteurFactice::echouantAvec(
             ExtractionImpossible::serviceIndisponible('502'),
-        ))(new ExtraireEtChiffrer($demande->id()));
+        ))(new ExtraireEtChiffrer($demande->id));
     }
 
     public function testUneDemandeDisparueNEstPasUneErreur(): void
