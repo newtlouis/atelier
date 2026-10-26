@@ -5,6 +5,43 @@ dans l'ordre chronologique inverse.
 
 ---
 
+## 2026-10-26 — Lot 2 (début) : le contrat d'extraction, sans appel réseau
+
+Tout ce qui précède l'appel au modèle, et qui se teste sans dépenser un centime.
+
+**L'absence d'information est une donnée de première classe.** `DemandeExtraite` porte un
+champ `champsManquants`, et `estExploitable()` refuse le chiffrage tant qu'il reste quoi que
+ce soit à deviner. Un modèle de langage répond *toujours* quelque chose ; le laisser inventer
+une hauteur de table produirait des devis faux et plausibles — le pire des deux mondes.
+
+**On croit les données, pas la déclaration du modèle.** `estExploitable()` ne se contente pas
+de vérifier que `champsManquants` est vide : elle vérifie les champs eux-mêmes. Un modèle qui
+affirme n'avoir rien oublié tout en laissant la largeur à null est contredit par le code, et
+un test couvre exactement ce cas.
+
+**La frontière IA / argent est maintenant matérialisée par Deptrac.** `Extraction` et `Devis`
+ne se connaissent pas : elles ne partagent que `Shared\Contrat\DemandeExtraite`. Le jour où
+quelqu'un voudra appeler un modèle depuis le calcul d'un prix, la CI l'en empêchera — ce n'est
+plus une intention, c'est une règle mécanique.
+
+**La lecture de la réponse est séparée de l'appel réseau.** `LecteurDeReponse` concentre tout
+ce qui peut mal tourner : JSON illisible, famille inconnue, dimension négative, dimension
+absurde. Une sortie structurée garantit la *forme* de la réponse, jamais sa *cohérence* : rien
+n'empêche un modèle de renvoyer une longueur de 120 000 mm. Isolé, ce code s'éprouve sur des
+dizaines de réponses malformées sans réseau ni dépense — huit cas pour l'instant.
+
+**Un extracteur factice vit dans `src/`, pas dans `tests/`.** Il permet de faire tourner la
+chaîne complète sans clé d'API, en développement comme en démonstration. Ce n'est pas un
+accessoire de test, c'est une implémentation de l'interface.
+
+### Infection : 99 %, et deux survivants assumés
+
+244 mutants, 242 tués. Les deux rescapés sont des gardes inatteignables par construction : la
+branche `null` d'un `match` — nécessaire à l'exhaustivité exigée par PHP — et un `throw`
+défensif qui convertit un `?int` en `int` pour l'analyse statique. Les tuer demanderait des
+tests artificiels pour du code qui ne peut pas s'exécuter. C'est précisément pour ces cas que
+le seuil est fixé à 95 et non à 100.
+
 ## 2026-10-26 — Lot 1 (fin) : ce qu'Infection a trouvé
 
 Première passe : **MSI 96 %**, 7 mutants survivants sur 201. Le chiffre n'est pas
