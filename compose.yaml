@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/app
+      - caddy_data:/data
+    environment:
+      DATABASE_URL: "postgresql://atelier:atelier@db:5432/atelier?serverVersion=16&charset=utf8"
+      APP_ENV: dev
+      # Clé API Claude — renseignée dans .env.local, jamais versionnée.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: atelier
+      POSTGRES_USER: atelier
+      POSTGRES_PASSWORD: atelier
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      # Sans ce healthcheck, l'application démarre avant Postgres et la première
+      # commande Doctrine échoue — d'où le `condition: service_healthy` ci-dessus.
+      test: ["CMD-SHELL", "pg_isready -U atelier -d atelier"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+
+volumes:
+  db_data:
+  caddy_data:
+

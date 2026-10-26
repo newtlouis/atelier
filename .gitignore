@@ -1,0 +1,25 @@
+/.env.local
+/.env.*.local
+/var/
+/vendor/
+/public/bundles/
+/public/assets/
+.php-cs-fixer.cache
+.phpunit.result.cache
+/phpstan.cache/
+.DS_Store
+.idea/
+.vscode/
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+# Caches des outils de qualité
+.deptrac.cache

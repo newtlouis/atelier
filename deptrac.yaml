@@ -1,0 +1,57 @@
+# Le découpage par domaine n'est une architecture que s'il est vérifié.
+# Un domaine qui en appelle un autre fait échouer la CI.
+#
+# `--fail-on-uncovered` est volontairement actif : toute classe App\ qui n'est
+# rattachée à aucune couche fait échouer l'analyse. On ne peut donc pas créer un
+# src/Autre/ sans le déclarer ici — c'est tout l'intérêt.
+deptrac:
+  paths:
+    - ./src
+  layers:
+    - name: Devis
+      collectors:
+        - type: directory
+          value: src/Devis/.*
+    - name: Catalogue
+      collectors:
+        - type: directory
+          value: src/Catalogue/.*
+    - name: Extraction
+      collectors:
+        - type: directory
+          value: src/Extraction/.*
+    - name: Shared
+      collectors:
+        - type: directory
+          value: src/Shared/.*
+    - name: Kernel
+      collectors:
+        - type: classNameRegex
+          value: '/^App\\Kernel$/'
+    # Tout ce qui n'est pas App\ : framework et bibliothèques.
+    - name: Vendor
+      collectors:
+        - type: classNameRegex
+          value: '/^(?!App\\)/'
+
+  ruleset:
+    # Chaque domaine ne connaît que Shared. Les échanges entre domaines passeront
+    # par des événements ou des ports explicites, ajoutés ici au cas par cas.
+    Devis:
+      - Shared
+      - Vendor
+    Catalogue:
+      - Shared
+      - Vendor
+    Extraction:
+      - Shared
+      - Vendor
+    Shared:
+      - Vendor
+    Kernel:
+      - Devis
+      - Catalogue
+      - Extraction
+      - Shared
+      - Vendor
+    Vendor: ~

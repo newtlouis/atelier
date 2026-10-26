@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    name: Tests et qualité
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # La CI lance exactement les commandes documentées dans le README.
+      # Si `make up` casse, la CI casse — on ne peut pas publier un README
+      # qui promet deux commandes sans les vérifier.
+      - name: Démarrer l'application
+        run: make up
+
+      - name: Tests
+        run: make test
+
+      - name: Qualité (PHPStan niveau 10, style, dépendances, vulnérabilités)
+        run: make qa
+
+      - name: Journaux en cas d'échec
+        if: failure()
+        run: docker compose logs --no-color
