@@ -5,6 +5,41 @@ dans l'ordre chronologique inverse.
 
 ---
 
+## 2026-10-27 — Le port, l'adaptateur, et une couche qui mentait
+
+Deux remarques de relecture, deux vrais défauts.
+
+**`src/Catalogue/` ne contenait qu'un `.gitkeep`** alors que `deptrac.yaml` le déclarait
+et que le README annonçait « trois domaines ». Le chiffrage est paramétrique : il applique
+un barème au m², il ne cherche pas dans un catalogue de pièces. La couche était une
+anticipation du plan, pas un besoin. Supprimée. Elle reviendra avec le code de la
+recherche de comparables, et `--fail-on-uncovered` obligera de toute façon à la déclarer.
+
+**`Extracteur` et `ExtracteurClaude` vivaient dans le même dossier.** L'inversion de
+dépendance était pourtant correcte — l'adaptateur dépendait du port, le câblage se faisait
+dans `services.yaml` — mais rien ne l'empêchait de s'inverser à la prochaine fonctionnalité
+pressée. Treize fichiers à plat mélangeaient l'interface, le suivi des coûts, le schéma
+JSON d'Anthropic et le dépôt Doctrine.
+
+Découpé en `Extracteur.php` (le port), `Cout/` (ce que le domaine sait de lui-même) et
+`Infrastructure/` (le SDK Anthropic, Doctrine, la doublure). Deptrac traite les deux
+derniers comme des couches distinctes, et j'ai **provoqué la violation pour vérifier
+qu'elle casse** avant de considérer la règle comme acquise.
+
+**Ce que le découpage a révélé :** `UsageAppel::echec()` lisait `SchemaExtraction::VERSION`.
+Un objet de mesure dépendait du schéma de prompt d'un fournisseur précis — invisible tant
+que les deux classes partageaient un dossier, impossible à ignorer une fois la frontière
+tracée. La version est maintenant passée par l'appelant. C'est l'argument pour ce genre de
+découpage : il ne range pas des fichiers, il rend visibles des dépendances qu'on ne voyait
+plus.
+
+**Ce qui n'a délibérément pas été séparé :** les entités de `Devis` gardent leurs attributs
+Doctrine. Un modèle de persistance distinct doublerait le code sans rien prouver. Un port
+se justifie là où l'implémentation peut changer ou coûter de l'argent — le fournisseur de
+modèle — pas partout par principe.
+
+---
+
 ## 2026-10-26 — Lot 2 (début) : le contrat d'extraction, sans appel réseau
 
 Tout ce qui précède l'appel au modèle, et qui se teste sans dépenser un centime.

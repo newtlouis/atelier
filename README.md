@@ -50,6 +50,33 @@ chacun ne connaît que `Shared`, et seul `Application` a le droit d'en connaîtr
 deux à la fois. La règle est vérifiée mécaniquement par Deptrac, pas documentée
 dans un wiki.
 
+## Le métier déclare, l'infrastructure implémente
+
+```
+src/Extraction/
+├── Extracteur.php            ← l'interface : une méthode, aucune dépendance technique
+├── Cout/                     ← ce que le domaine sait de lui-même : jetons, grille, journal
+└── Infrastructure/
+    ├── Claude/               ← le SDK Anthropic ne se trouve que là
+    ├── JournalDoctrine.php
+    └── ExtracteurFactice.php
+```
+
+`Extracteur` ne connaît pas `ExtracteurClaude`. Ce n'est pas une convention : Deptrac
+traite `Extraction` et `Extraction/Infrastructure` comme deux couches, et la seconde
+seule a le droit de connaître la première. Nommer l'adaptateur depuis le port casse la
+CI — vérifié en provoquant la violation avant d'écrire cette ligne.
+
+Le choix de l'implémentation est fait une seule fois, dans `config/services.yaml` ;
+en test, `config/services_test.yaml` bascule sur une doublure, ce qui garantit qu'aucune
+suite ne peut déclencher un appel facturé.
+
+**Ce qui n'est délibérément pas séparé :** les entités de `Devis` portent leurs attributs
+Doctrine, et `DevisRepository` est un dépôt Doctrine. Un modèle de persistance distinct
+doublerait le code pour un gain nul ici. La règle appliquée est plus étroite, et c'est
+celle qui tient : **un port là où l'implémentation peut changer ou coûter de l'argent**
+— le fournisseur de modèle — pas partout par principe.
+
 ## Le nommage : français ou anglais ?
 
 Les deux, selon une règle simple : **le vocabulaire du métier reste dans la langue du

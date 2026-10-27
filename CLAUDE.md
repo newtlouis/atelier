@@ -49,6 +49,20 @@ qui explique **pourquoi**, pas quoi — le diff dit déjà quoi.
 Exception unique : un montant stocké en centimes reste derrière un accesseur qui rend
 un `Montant`. Exposer l'entier inviterait à faire de l'arithmétique dessus.
 
+## Où va un fichier
+
+Le découpage est **par domaine** (`Devis`, `Extraction`), pas par couche technique : il
+n'y a pas de `src/Domain`, `src/Infrastructure` transversaux. À l'intérieur d'un domaine :
+
+- l'**interface** reste à la racine du domaine — c'est sa face publique ;
+- ce que le domaine sait de lui-même va dans un sous-dossier nommé par le sujet
+  (`Extraction/Cout`, `Devis/Chiffrage`, `Devis/Facturation`) ;
+- toute classe qui nomme un SDK externe va dans `<Domaine>/Infrastructure/`, et Deptrac
+  interdit au reste du domaine de la connaître.
+
+Un port ne se crée pas par principe mais **là où l'implémentation peut changer ou coûter
+de l'argent**. Partout ailleurs, Doctrine est utilisé directement et assumé.
+
 ## Nommage
 
 Le vocabulaire du métier en français (`Devis`, `Facture`, `Bareme`, `Montant`), la
