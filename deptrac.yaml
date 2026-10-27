@@ -12,10 +12,6 @@ deptrac:
       collectors:
         - type: directory
           value: src/Devis/.*
-    - name: Catalogue
-      collectors:
-        - type: directory
-          value: src/Catalogue/.*
     - name: Extraction
       collectors:
         - type: directory
@@ -46,9 +42,6 @@ deptrac:
     Devis:
       - Shared
       - Vendor
-    Catalogue:
-      - Shared
-      - Vendor
     Extraction:
       - Shared
       - Vendor
@@ -56,14 +49,12 @@ deptrac:
       - Vendor
     Application:
       - Devis
-      - Catalogue
       - Extraction
       - Shared
       - Vendor
     Kernel:
       - Application
       - Devis
-      - Catalogue
       - Extraction
       - Shared
       - Vendor

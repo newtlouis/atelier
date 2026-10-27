@@ -14,7 +14,7 @@ doctrine:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
         auto_mapping: true
         mappings:
-            # Les entités vivent dans leur domaine (src/Devis, src/Catalogue…),
+            # Les entités vivent dans leur domaine (src/Devis, src/Extraction…),
             # pas dans un src/Entity transversal : Doctrine scanne donc tout src/
             # et ne retient que les classes portant l'attribut #[ORM\Entity].
             App:
