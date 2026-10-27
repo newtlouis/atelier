@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Infrastructure\Claude;
 
+use App\Extraction\ExtractionImpossible;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
 use JsonException;

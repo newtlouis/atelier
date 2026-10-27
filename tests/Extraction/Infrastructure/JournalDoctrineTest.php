@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Extraction;
+namespace App\Tests\Extraction\Infrastructure;
 
-use App\Extraction\Entite\AppelLlm;
-use App\Extraction\GrilleTarifaire;
-use App\Extraction\JournalDoctrine;
-use App\Extraction\UsageAppel;
+use App\Extraction\Cout\AppelLlm;
+use App\Extraction\Cout\GrilleTarifaire;
+use App\Extraction\Cout\UsageAppel;
+use App\Extraction\Infrastructure\JournalDoctrine;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -50,7 +50,7 @@ final class JournalDoctrineTest extends KernelTestCase
     {
         // Un taux d'échec invisible est un taux d'échec qu'on ne corrige pas.
         $this->journal()->enregistre(
-            UsageAppel::echec('claude-opus-5', 'délai dépassé', latenceMs: 30_000),
+            UsageAppel::echec('claude-opus-5', 'v1', 'délai dépassé', latenceMs: 30_000),
         );
 
         // clear() vide l'identity map : ce qui suit vient réellement de

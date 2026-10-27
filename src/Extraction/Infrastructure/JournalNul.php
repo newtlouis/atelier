@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Infrastructure;
+
+use App\Extraction\Cout\JournalDesAppels;
+use App\Extraction\Cout\UsageAppel;
 
 /**
  * Ne retient rien. Utile en test et tant que la persistance n'existe pas :

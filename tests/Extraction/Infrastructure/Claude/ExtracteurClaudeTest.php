@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Extraction;
+namespace App\Tests\Extraction\Infrastructure\Claude;
 
-use App\Extraction\ExtracteurClaude;
+use App\Extraction\Infrastructure\Claude\ExtracteurClaude;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 

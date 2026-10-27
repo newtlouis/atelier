@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Infrastructure\Claude;
 
 use Anthropic\Client;
 use Anthropic\Messages\Message;
 use Anthropic\Messages\OutputConfig\Effort;
 use Anthropic\Messages\TextBlock;
+use App\Extraction\Cout\JournalDesAppels;
+use App\Extraction\Cout\UsageAppel;
+use App\Extraction\Extracteur;
+use App\Extraction\ExtractionImpossible;
 use App\Shared\Contrat\DemandeExtraite;
 use Throwable;
 
@@ -78,6 +82,7 @@ final readonly class ExtracteurClaude implements Extracteur
         } catch (Throwable $e) {
             $this->journal->enregistre(UsageAppel::echec(
                 $this->modele,
+                SchemaExtraction::VERSION,
                 $e->getMessage(),
                 $this->millisecondesDepuis($debut),
             ));

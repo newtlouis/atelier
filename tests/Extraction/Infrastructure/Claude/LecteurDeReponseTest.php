@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Extraction;
+namespace App\Tests\Extraction\Infrastructure\Claude;
 
 use App\Extraction\ExtractionImpossible;
-use App\Extraction\LecteurDeReponse;
+use App\Extraction\Infrastructure\Claude\LecteurDeReponse;
 use App\Shared\Contrat\FamilleProduit;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Infrastructure\Claude;
 
 /**
  * Le schéma JSON que le modèle doit respecter, et la consigne qui l'accompagne.

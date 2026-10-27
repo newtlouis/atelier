@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Infrastructure;
 
-use App\Extraction\Entite\AppelLlm;
+use App\Extraction\Cout\AppelLlm;
+use App\Extraction\Cout\GrilleTarifaire;
+use App\Extraction\Cout\JournalDesAppels;
+use App\Extraction\Cout\ModeleInconnu;
+use App\Extraction\Cout\UsageAppel;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;

@@ -2,4 +2,4 @@ services:
     # Aucun appel réseau en test : si un code oublié passait par le conteneur,
     # il tomberait sur la doublure plutôt que sur l'API — et donc sur une
     # erreur explicite, pas sur une facture.
-    App\Extraction\Extracteur: '@App\Extraction\ExtracteurFactice'
+    App\Extraction\Extracteur: '@App\Extraction\Infrastructure\ExtracteurFactice'

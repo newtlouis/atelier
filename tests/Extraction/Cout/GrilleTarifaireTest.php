@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Extraction;
+namespace App\Tests\Extraction\Cout;
 
-use App\Extraction\GrilleTarifaire;
-use App\Extraction\ModeleInconnu;
-use App\Extraction\UsageAppel;
+use App\Extraction\Cout\GrilleTarifaire;
+use App\Extraction\Cout\ModeleInconnu;
+use App\Extraction\Cout\UsageAppel;
 use PHPUnit\Framework\TestCase;
 
 final class GrilleTarifaireTest extends TestCase
@@ -72,7 +72,7 @@ final class GrilleTarifaireTest extends TestCase
     public function testUnAppelEnEchecNeCouteRien(): void
     {
         $cout = new GrilleTarifaire()->coutEnNanoDollars(
-            UsageAppel::echec('claude-opus-5', 'délai dépassé', latenceMs: 30_000),
+            UsageAppel::echec('claude-opus-5', 'v1', 'délai dépassé', latenceMs: 30_000),
         );
 
         self::assertSame(0, $cout);

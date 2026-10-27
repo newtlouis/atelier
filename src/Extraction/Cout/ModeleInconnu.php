@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Cout;
 
 use DomainException;
 

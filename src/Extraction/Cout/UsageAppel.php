@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Cout;
 
 /**
  * Ce qu'a consommé un appel au modèle.
@@ -24,11 +24,15 @@ final readonly class UsageAppel
         public ?string $erreur = null,
     ) {}
 
-    public static function echec(string $modele, string $erreur, int $latenceMs): self
-    {
+    public static function echec(
+        string $modele,
+        string $versionPrompt,
+        string $erreur,
+        int $latenceMs,
+    ): self {
         return new self(
             modele: $modele,
-            versionPrompt: SchemaExtraction::VERSION,
+            versionPrompt: $versionPrompt,
             tokensEntree: 0,
             tokensSortie: 0,
             tokensCacheEcriture: 0,

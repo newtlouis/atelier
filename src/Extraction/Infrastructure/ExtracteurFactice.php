@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Infrastructure;
 
+use App\Extraction\Extracteur;
 use App\Shared\Contrat\DemandeExtraite;
 use LogicException;
 use Throwable;

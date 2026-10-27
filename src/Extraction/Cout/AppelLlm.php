@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction\Entite;
+namespace App\Extraction\Cout;
 
-use App\Extraction\UsageAppel;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
