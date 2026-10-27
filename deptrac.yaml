@@ -12,10 +12,23 @@ deptrac:
       collectors:
         - type: directory
           value: src/Devis/.*
+    # Le domaine Extraction est coupé en deux, et c'est le cœur de l'affaire :
+    # l'interface `Extracteur` et le suivi des coûts d'un côté, l'adaptateur
+    # Anthropic de l'autre. La règle ci-dessous interdit au premier de connaître
+    # le second — l'inversion de dépendance cesse d'être une intention.
     - name: Extraction
       collectors:
+        - type: bool
+          must:
+            - type: directory
+              value: src/Extraction/.*
+          must_not:
+            - type: directory
+              value: src/Extraction/Infrastructure/.*
+    - name: ExtractionInfrastructure
+      collectors:
         - type: directory
-          value: src/Extraction/.*
+          value: src/Extraction/Infrastructure/.*
     - name: Shared
       collectors:
         - type: directory
@@ -43,6 +56,12 @@ deptrac:
       - Shared
       - Vendor
     Extraction:
+      - Shared
+      - Vendor
+    # L'adaptateur connaît le port, jamais l'inverse. C'est la seule couche
+    # autorisée à nommer le SDK Anthropic ou Doctrine pour ce domaine.
+    ExtractionInfrastructure:
+      - Extraction
       - Shared
       - Vendor
     Shared:
