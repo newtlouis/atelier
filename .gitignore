@@ -34,3 +34,6 @@
 
 # Marqueur de bac à sable (bin/bac-a-sable)
 /.bac-a-sable
+
+# Réglages Claude Code personnels (les règles partagées sont dans .claude/settings.json)
+/.claude/settings.local.json
