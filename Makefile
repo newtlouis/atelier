@@ -1,6 +1,9 @@
 # Toutes les commandes tournent dans le conteneur : rien à installer en local
 # hormis un moteur de conteneurs.
 DC := docker compose
+# Port HTTP ; un bac à sable en prend un autre (voir bin/bac-a-sable).
+APP_PORT ?= 8080
+export APP_PORT
 PHP := $(DC) exec -T app
 
 .DEFAULT_GOAL := help
@@ -10,10 +13,10 @@ help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
 		| awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-up: ## Démarre l'application (http://localhost:8080)
+up: ## Démarre l'application (http://localhost:$(APP_PORT))
 	$(DC) up -d --build
 	@$(MAKE) --no-print-directory install
-	@echo "→ http://localhost:8080"
+	@echo "→ http://localhost:$(APP_PORT)"
 
 down: ## Arrête tout et supprime les volumes
 	$(DC) down -v
