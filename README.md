@@ -77,6 +77,28 @@ doublerait le code pour un gain nul ici. La règle appliquée est plus étroite,
 celle qui tient : **un port là où l'implémentation peut changer ou coûter de l'argent**
 — le fournisseur de modèle — pas partout par principe.
 
+## Développé avec des agents, sous contrôle
+
+Une bonne partie du code de ce dépôt est écrite par Claude Code. Ce qui compte n'est pas
+qui tape, c'est **ce qui empêche un code faux d'arriver sur `main`** — et ce qui garantit
+qu'on a construit la bonne chose. Tout est versionné dans [`.claude/`](.claude) :
+
+| Étape | Ce qui la tient | Où |
+|---|---|---|
+| Cadrer | Une fiche par fonctionnalité : problème, preuve, critère de succès chiffré, appétit, hors périmètre. Validée avant la première ligne de code. | `/feature`, `docs/fiches/` |
+| Écrire | Après chaque fichier : style corrigé, PHPStan niveau 10 sur ce fichier. Avant chaque fichier : refus d'un flottant dans le calcul d'argent, d'un appel au domaine IA depuis le devis, d'un `@phpstan-ignore`. | `.claude/hooks/` |
+| Conclure | L'agent ne peut pas rendre la main sur un dépôt rouge : tests, PHPStan, Deptrac et style tournent à chaque fin de tour. | `barriere-fin-de-tour.sh` |
+| Relire | Deux relecteurs spécialisés en parallèle (sécurité, architecture), et un troisième qui lance Infection sur les fichiers touchés et écrit les tests qui manquent. Chaque constat est vérifié avant d'être retenu. | `.claude/agents/`, `/revue` |
+| Paralléliser | Un lot = un worktree + sa propre pile Docker sur un port libre. | `make bac-a-sable NOM=…` |
+| Livrer | La CI rejoue les commandes du README ; une revue Claude commente chaque pull request. | `.github/workflows/` |
+| Mesurer | À la date fixée dans la fiche, on va chercher la donnée et on décide : garder, ajuster, retirer. | `/bilan` |
+
+**Ce que l'agent ne peut pas faire, par construction et pas par consigne :** pousser,
+lire la clé d'API, détruire les volumes de base de données, régénérer une baseline
+PHPStan, désactiver un test, ou modifier `deptrac.yaml`, `phpstan.neon`, `infection.json5`
+et la CI sans accord explicite. Un agent qui peut abaisser la barrière qui le juge finit
+par le faire. Le mode « bypass » des permissions est désactivé dans ce dépôt.
+
 ## Le nommage : français ou anglais ?
 
 Les deux, selon une règle simple : **le vocabulaire du métier reste dans la langue du

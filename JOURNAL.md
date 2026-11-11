@@ -5,6 +5,54 @@ dans l'ordre chronologique inverse.
 
 ---
 
+## 2026-11-11 — L'outillage de l'agent, versionné avec le code
+
+Jusqu'ici, les règles destinées à l'agent vivaient dans `CLAUDE.md` : des consignes qu'il
+suit la plupart du temps. Une consigne n'est pas une garantie. Ce lot déplace dans
+`.claude/` tout ce qui peut être vérifié mécaniquement, et ne laisse en prose que ce qui
+demande du jugement.
+
+**Le principe de tri : un agent n'abaisse pas la barrière qui l'évalue.** Les fichiers qui
+jugent le code (`deptrac.yaml`, `phpstan.neon`, `infection.json5`, la CI) demandent mon
+accord avant modification ; une baseline PHPStan ne se régénère pas, une annotation
+`@phpstan-ignore` est refusée avant écriture, un test ne se désactive pas. Sans ces
+verrous, la façon la plus rapide de « faire passer la CI » est de la desserrer — et un
+agent pressé par son propre objectif trouve ce chemin.
+
+**Les invariants métier ont maintenant deux lignes de défense.** Deptrac et PHPStan les
+attrapaient déjà, mais en CI et sous une forme générique. Le hook `garde-invariants.sh`
+les attrape *avant* l'écriture, avec la règle métier en clair (« aucun flottant dans
+Devis : les montants sont des centimes entiers ») : l'agent corrige du premier coup au
+lieu de tourner autour d'un message de PHPStan.
+
+**Le hook de fin de tour coûte huit secondes**, mesurées : la suite entière tourne en
+trois, PHPStan, Deptrac et le style en cinq. C'est ce qui a permis de le lancer à chaque
+tour plutôt qu'au commit. Le test de mutation (une minute sur tout le dépôt, cinq secondes
+filtré sur deux fichiers) reste à l'agent `chasseur-de-mutants` et à la CI.
+
+**Le mode « bypass » est désactivé pour ce dépôt.** Je l'utilisais ailleurs pour aller
+vite. Ici, les permissions et les hooks rendent les demandes d'accord rares, et celles qui
+restent sont exactement celles que je veux voir passer.
+
+**Bacs à sable.** Le port HTTP devient paramétrable (`APP_PORT`) : deux lots peuvent
+avancer en même temps, chacun dans un worktree avec sa pile Docker et sa base. Vérifié en
+faisant tourner la suite dans une seconde pile sur le port 8081 pendant que la principale
+répondait sur le 8080.
+
+**Ce que ce lot a révélé :** `config/reference.php`, généré par Symfony, change selon
+l'environnement démarré en dernier — `cache:clear --env=dev` y ajoute la section
+`when@dev`, `--env=test` la retire. Le dépôt est donc « sale » après un simple `make up`,
+et le script de bac à sable refusait, à juste titre, de détruire un worktree modifié. Le
+script remet ce fichier en l'état avant destruction ; la vraie correction (le versionner
+ou non, et sous quelle forme) reste à trancher.
+
+**Écarté :** un agent « implémenteur » isolé en worktree automatique. Il travaillerait sans
+pile Docker, donc sans tests ni PHPStan — un agent qui ne peut pas vérifier son travail
+n'en produit pas un meilleur. Le parallélisme passe par des sessions dans des bacs à sable
+complets.
+
+---
+
 ## 2026-10-27 — Le port, l'adaptateur, et une couche qui mentait
 
 Deux remarques de relecture, deux vrais défauts.

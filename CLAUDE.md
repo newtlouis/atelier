@@ -80,6 +80,28 @@ make mutation  # Infection — seuil MSI 90, MSI couvert 95
 
 Rien ne s'installe en local : tout tourne dans les conteneurs.
 
+## Travailler dans ce dépôt avec un agent
+
+Le déroulé d'une fonctionnalité est dans la skill `/feature` : fiche (problème, preuve,
+critère de succès) validée par Louis, plan validé, puis implémentation commit par commit,
+relecture croisée (`/revue`) et, à la date prévue, mesure de l'effet (`/bilan`).
+
+Ce qui est mécanique est dans `.claude/settings.json`, pas dans ce fichier :
+
+- **les hooks** corrigent le style et lancent PHPStan après chaque écriture, refusent
+  avant écriture un flottant dans `Devis`/`Shared`, une dépendance de `Devis` vers
+  `Extraction` ou une annotation qui fait taire un outil, et empêchent de conclure un tour
+  tant que `make test` et `make qa` ne passent pas. Leur message dit la règle : la suivre,
+  ne pas chercher à les contourner ;
+- **les permissions** interdisent le push, la lecture de `.env.local` et la destruction
+  des volumes, et demandent l'accord de Louis avant toute modification des fichiers qui
+  jugent le code (`deptrac.yaml`, `phpstan.neon`, `infection.json5`, la CI) : **un agent
+  n'abaisse pas la barrière qui l'évalue** ;
+- **le mode « bypass » est désactivé** pour ce dépôt.
+
+Travail en parallèle : `make bac-a-sable NOM=<lot>` crée un worktree avec sa propre pile
+Docker sur un port libre ; une session par bac à sable.
+
 ## Avant de proposer une dépendance
 
 Ce dépôt en a déjà retiré une (`symfony/workflow`, installée puis jamais utilisée).
