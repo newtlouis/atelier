@@ -67,6 +67,15 @@
             "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/garde-commandes.sh"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}\"/.claude/hooks/garde-invariants.sh"
+          }
+        ]
       }
     ]
   }
