@@ -1,0 +1,47 @@
+name: Revue Claude
+
+# Une relecture automatique de chaque pull request, en plus de la CI et non à sa place :
+# la CI dit si le code est correct au sens des outils (tests, PHPStan, Deptrac, mutation),
+# la relecture cherche ce qu'aucun outil ne voit — un invariant de CLAUDE.md contourné,
+# une donnée personnelle dans un journal, un outil exposé au modèle qui écrit.
+#
+# Elle ne bloque rien : elle commente. La décision de fusionner reste humaine.
+# Inactive tant que le secret ANTHROPIC_API_KEY n'est pas configuré dans le dépôt.
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+concurrency:
+  group: revue-claude-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  revue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+    env:
+      CLE_PRESENTE: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      - name: Signaler l'absence de clé
+        if: env.CLE_PRESENTE != 'true'
+        run: echo "::notice::Secret ANTHROPIC_API_KEY absent — revue Claude sautée."
+
+      - uses: actions/checkout@v4
+        if: env.CLE_PRESENTE == 'true'
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        if: env.CLE_PRESENTE == 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: "https://github.com/anthropics/claude-plugins-official.git"
+          plugins: "code-review@claude-plugins-official"
+          prompt: "/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+          claude_args: '--max-turns 30 --allowedTools "mcp__github_inline_comment__create_inline_comment"'
