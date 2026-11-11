@@ -7,7 +7,7 @@ export APP_PORT
 PHP := $(DC) exec -T app
 
 .DEFAULT_GOAL := help
-.PHONY: help up down install test qa stan cs deptrac audit mutation shell db-reset
+.PHONY: help up down install test qa stan cs deptrac audit mutation shell db-reset bac-a-sable bac-a-sable-fin
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -59,3 +59,9 @@ db-reset: ## Recrée la base de développement
 	$(PHP) php bin/console doctrine:database:drop --force --if-exists
 	$(PHP) php bin/console doctrine:database:create
 	$(PHP) php bin/console doctrine:migrations:migrate --no-interaction
+
+bac-a-sable: ## Worktree + pile Docker isolés pour un lot parallèle (NOM=…)
+	bin/bac-a-sable creer $(NOM)
+
+bac-a-sable-fin: ## Détruit un bac à sable ; la branche lot/NOM est gardée (NOM=…)
+	bin/bac-a-sable detruire $(NOM)

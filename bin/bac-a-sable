@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Un bac à sable = un worktree Git sur sa propre branche, avec sa propre pile Docker
+# (base comprise) sur un port libre. C'est ce qui permet de mener deux lots en même
+# temps, un agent par lot, sans qu'ils se marchent dessus : ni fichiers, ni base, ni port
+# en commun.
+#
+#   bin/bac-a-sable creer <nom>      → ../atelier-<nom>, branche lot/<nom>, pile démarrée
+#   bin/bac-a-sable detruire <nom>   → pile et volumes supprimés, worktree retiré ;
+#                                      la branche est gardée, c'est là qu'est le travail
+#
+# Docker Compose nomme les conteneurs et les volumes d'après le dossier : un worktree
+# dans ../atelier-<nom> obtient donc des volumes à lui, jamais ceux du dépôt principal.
+set -euo pipefail
+
+action=${1:-}
+nom=${2:-}
+if [[ ! "$action" =~ ^(creer|detruire)$ || ! "$nom" =~ ^[a-z0-9-]+$ ]]; then
+    echo "usage : bin/bac-a-sable creer|detruire <nom en minuscules-et-tirets>" >&2
+    exit 1
+fi
+
+principal=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
+dossier="$(dirname "$principal")/atelier-$nom"
+
+case "$action" in
+creer)
+    git -C "$principal" worktree add -b "lot/$nom" "$dossier"
+    # La clé d'API n'est pas versionnée : le bac à sable reprend celle du dépôt principal.
+    [[ -f "$principal/.env.local" ]] && cp "$principal/.env.local" "$dossier/.env.local"
+
+    port=8081
+    while lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; do
+        port=$((port + 1))
+    done
+    echo "APP_PORT=$port" >"$dossier/.bac-a-sable"
+
+    (cd "$dossier" && APP_PORT=$port make up)
+    echo
+    echo "Bac à sable prêt : $dossier (branche lot/$nom, http://localhost:$port)"
+    echo "Ouvrir une session : cd $dossier && claude"
+    ;;
+detruire)
+    if [[ "$dossier" == "$principal" || ! -f "$dossier/.bac-a-sable" ]]; then
+        echo "$dossier n'est pas un bac à sable créé par ce script : rien n'est détruit." >&2
+        exit 1
+    fi
+    (cd "$dossier" && docker compose down -v --remove-orphans)
+    rm "$dossier/.bac-a-sable" "$dossier/.env.local" 2>/dev/null || true
+    # Fichier généré par Symfony, qui change selon l'environnement démarré en dernier
+    # (voir JOURNAL du 11/11/2026) : ce n'est pas du travail, on le remet en l'état.
+    git -C "$dossier" checkout -- config/reference.php
+    # Tout autre changement non commité fait échouer la commande suivante : c'est voulu.
+    git -C "$principal" worktree remove "$dossier"
+    echo "Bac à sable détruit. Le travail reste sur la branche lot/$nom."
+    ;;
+esac

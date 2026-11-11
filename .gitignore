@@ -31,3 +31,6 @@
 
 # Rapports Infection
 /var/infection*.log
+
+# Marqueur de bac à sable (bin/bac-a-sable)
+/.bac-a-sable
