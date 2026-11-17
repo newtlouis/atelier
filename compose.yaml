@@ -12,8 +12,10 @@ services:
     environment:
       DATABASE_URL: "postgresql://atelier:atelier@db:5432/atelier?serverVersion=16&charset=utf8"
       APP_ENV: dev
-      # Clé API Claude — renseignée dans .env.local, jamais versionnée.
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # La clé API Claude n'est volontairement pas transmise ici. Symfony la lit
+      # dans .env.local, monté avec le reste du dépôt. La transmettre depuis
+      # compose créerait une variable d'environnement, vide si la clé n'est pas
+      # dans .env — et une vraie variable, même vide, l'emporte sur .env.local.
     depends_on:
       db:
         condition: service_healthy
