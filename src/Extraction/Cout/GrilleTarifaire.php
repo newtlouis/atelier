@@ -15,20 +15,33 @@ namespace App\Extraction\Cout;
  *    et une imprécision, pour un chiffre qui ne sert qu'à mesurer ;
  * 2. l'entier évite les flottants, comme partout ailleurs dans ce dépôt ;
  * 3. le nano-dollar permet d'écrire sans arrondi les tarifs fractionnaires :
- *    l'écriture en cache coûte 1,25 fois un jeton d'entrée, soit 6 250 pour
- *    Opus 5 — un nombre rond ici, impossible en micro-dollars.
+ *    l'écriture en cache coûte 1,25 fois un jeton d'entrée, soit 125 pour
+ *    Haiku 5.5 — un nombre rond ici, impossible en micro-dollars.
  *
- * Un appel typique d'extraction revient à environ 15 millions de nano-dollars,
- * soit 1,5 centime de dollar.
+ * Un appel typique d'extraction sur Opus 5.5 revient à environ 12 millions de
+ * nano-dollars, soit 1,2 centime de dollar.
  */
 final class GrilleTarifaire
 {
     /**
-     * Tarifs au 26/10/2026, en nano-dollars par jeton.
+     * Tarifs en nano-dollars par jeton.
+     *
+     * Les modèles de la génération précédente restent dans la grille : les
+     * appels déjà journalisés portent leur identifiant, et leur coût doit
+     * rester calculable. Retirer une ligne effacerait l'historique.
      *
      * @var array<string, array{entree: int, sortie: int, cacheEcriture: int, cacheLecture: int}>
      */
     private const array TARIFS = [
+        // Génération 5.5, tarifs au 17/11/2026.
+        // 4 $ / 20 $ par million ; la relecture du cache est à 0,20 $, un vingtième.
+        'claude-opus-5-5' => ['entree' => 4_000, 'sortie' => 20_000, 'cacheEcriture' => 5_000, 'cacheLecture' => 200],
+        // 2 $ / 10 $ par million ; relecture à 0,10 $.
+        'claude-sonnet-5-5' => ['entree' => 2_000, 'sortie' => 10_000, 'cacheEcriture' => 2_500, 'cacheLecture' => 100],
+        // 0,10 $ / 0,50 $ par million, pour une requête de moins de 100 000 jetons.
+        'claude-haiku-5-5' => ['entree' => 100, 'sortie' => 500, 'cacheEcriture' => 125, 'cacheLecture' => 10],
+
+        // Génération précédente, tarifs au 26/10/2026.
         // 5 $ / 25 $ par million de jetons.
         'claude-opus-5' => ['entree' => 5_000, 'sortie' => 25_000, 'cacheEcriture' => 6_250, 'cacheLecture' => 500],
         // 2 $ / 10 $ par million.

@@ -41,7 +41,7 @@ final readonly class ExtracteurClaude implements Extracteur
     public function __construct(
         private Client $client,
         private JournalDesAppels $journal,
-        private string $modele = 'claude-opus-5',
+        private string $modele = 'claude-opus-5-5',
         private Effort $effort = Effort::LOW,
         private int $maxTokens = 1_024,
     ) {}

@@ -11,18 +11,18 @@ use PHPUnit\Framework\TestCase;
 
 final class GrilleTarifaireTest extends TestCase
 {
-    public function testUnAppelTypiqueCouteEnvironUnCentimeEtDemiDeDollar(): void
+    public function testUnAppelTypiqueCouteEnvironUnCentimeDeDollar(): void
     {
         // Le chiffre qui compte commercialement : sur un devis à 1 800 €,
-        // l'extraction coûte moins de deux centimes.
+        // l'extraction coûte à peine plus d'un centime.
         $cout = new GrilleTarifaire()->coutEnNanoDollars($this->usage(
             tokensEntree: 1_400,
             tokensSortie: 300,
         ));
 
-        // 1 400 × 5 000 + 300 × 25 000 = 14 500 000 nano-dollars.
-        self::assertSame(14_500_000, $cout);
-        self::assertSame('0,0145 $', GrilleTarifaire::enDollars($cout));
+        // 1 400 × 4 000 + 300 × 20 000 = 11 600 000 nano-dollars.
+        self::assertSame(11_600_000, $cout);
+        self::assertSame('0,0116 $', GrilleTarifaire::enDollars($cout));
     }
 
     public function testLeCacheDiviseLeCoutDeLaConsigne(): void
@@ -30,10 +30,10 @@ final class GrilleTarifaireTest extends TestCase
         $sansCache = new GrilleTarifaire()->coutEnNanoDollars($this->usage(tokensEntree: 1_000));
         $avecCache = new GrilleTarifaire()->coutEnNanoDollars($this->usage(tokensCacheLecture: 1_000));
 
-        // 500 contre 5 000 par jeton : un dixième du prix.
-        self::assertSame(5_000_000, $sansCache);
-        self::assertSame(500_000, $avecCache);
-        self::assertSame($sansCache, $avecCache * 10);
+        // 200 contre 4 000 par jeton : un vingtième du prix sur Opus 5.5.
+        self::assertSame(4_000_000, $sansCache);
+        self::assertSame(200_000, $avecCache);
+        self::assertSame($sansCache, $avecCache * 20);
     }
 
     public function testEcrireDansLeCacheCoutePlusCherQuUnJetonNormal(): void
@@ -42,21 +42,36 @@ final class GrilleTarifaireTest extends TestCase
         // C'est ce qui rend le cache perdant sur un appel unique, et gagnant dès le second.
         $ecriture = new GrilleTarifaire()->coutEnNanoDollars($this->usage(tokensCacheEcriture: 1_000));
 
-        self::assertSame(6_250_000, $ecriture);
+        self::assertSame(5_000_000, $ecriture);
     }
 
-    public function testHaikuCouteCinqFoisMoinsCherQuOpus(): void
+    public function testHaikuCouteQuaranteFoisMoinsCherQuOpus(): void
     {
         $grille = new GrilleTarifaire();
 
         $opus = $grille->coutEnNanoDollars($this->usage(tokensEntree: 1_400, tokensSortie: 300));
         $haiku = $grille->coutEnNanoDollars($this->usage(
-            modele: 'claude-haiku-4-5',
+            modele: 'claude-haiku-5-5',
             tokensEntree: 1_400,
             tokensSortie: 300,
         ));
 
-        self::assertSame($opus, $haiku * 5);
+        // C'est l'écart que l'évaluation doit justifier : Haiku ne se choisit
+        // pas au prix, mais à la qualité mesurée sur le jeu de cas.
+        self::assertSame($opus, $haiku * 40);
+    }
+
+    public function testUnAppelDejaJournaliseSurUnAncienModeleRestePrixable(): void
+    {
+        // Les appels en base portent l'identifiant du modèle de l'époque.
+        // Changer de modèle par défaut ne doit pas rendre leur coût incalculable.
+        $cout = new GrilleTarifaire()->coutEnNanoDollars($this->usage(
+            modele: 'claude-opus-5',
+            tokensEntree: 1_400,
+            tokensSortie: 300,
+        ));
+
+        self::assertSame(14_500_000, $cout);
     }
 
     public function testUnModeleSansTarifEstRefuseEtNonFactureAZero(): void
@@ -72,14 +87,14 @@ final class GrilleTarifaireTest extends TestCase
     public function testUnAppelEnEchecNeCouteRien(): void
     {
         $cout = new GrilleTarifaire()->coutEnNanoDollars(
-            UsageAppel::echec('claude-opus-5', 'v1', 'délai dépassé', latenceMs: 30_000),
+            UsageAppel::echec('claude-opus-5-5', 'v1', 'délai dépassé', latenceMs: 30_000),
         );
 
         self::assertSame(0, $cout);
     }
 
     private function usage(
-        string $modele = 'claude-opus-5',
+        string $modele = 'claude-opus-5-5',
         int $tokensEntree = 0,
         int $tokensSortie = 0,
         int $tokensCacheEcriture = 0,
