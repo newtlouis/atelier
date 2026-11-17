@@ -15,7 +15,7 @@ namespace App\Extraction\Infrastructure\Claude;
 final class SchemaExtraction
 {
     /** À incrémenter à chaque modification de la consigne ou du schéma. */
-    public const string VERSION = 'v1';
+    public const string VERSION = 'v2';
 
     public static function consigne(): string
     {
@@ -56,9 +56,14 @@ final class SchemaExtraction
         return [
             'type' => 'object',
             'properties' => [
+                // Une valeur parmi une liste OU null s'écrit avec anyOf. La forme
+                // « type: [string, null] + enum » est refusée par l'API (400) :
+                // la v1 du schéma n'a jamais passé un appel réel.
                 'famille' => [
-                    'type' => ['string', 'null'],
-                    'enum' => ['table', 'mur', null],
+                    'anyOf' => [
+                        ['type' => 'string', 'enum' => ['table', 'mur']],
+                        ['type' => 'null'],
+                    ],
                     'description' => 'Le type de produit demandé, ou null si indéterminable.',
                 ],
                 'longueur_mm' => [
