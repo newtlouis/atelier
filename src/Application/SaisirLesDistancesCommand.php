@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application;
 
 use App\Devis\Chiffrage\CommandeSousLeMinimum;
+use App\Devis\Chiffrage\SaisieDeDistance;
 use App\Devis\Entite\LectureDeDemande;
 use App\Devis\Entite\LectureRepository;
 use App\Shared\Contrat\FamilleProduit;

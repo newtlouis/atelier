@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Application;
 
-use App\Application\SaisieDeDistance;
 use App\Application\SaisirLesDistancesCommand;
 use App\Devis\Chiffrage\ChiffreurDeDemande;
 use App\Devis\Chiffrage\ChiffreurMur;
 use App\Devis\Chiffrage\ChiffreurTable;
+use App\Devis\Chiffrage\SaisieDeDistance;
 use App\Devis\Entite\Demande;
 use App\Devis\Entite\Devis;
 use App\Devis\Entite\DevisRepository;

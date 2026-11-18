@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Application;
+namespace App\Devis\Chiffrage;
 
-use App\Devis\Chiffrage\ChiffreurDeDemande;
-use App\Devis\Chiffrage\CommandeSousLeMinimum;
-use App\Devis\Chiffrage\DemandeIncomplete;
 use App\Devis\Entite\Devis;
 use App\Devis\Entite\DevisRepository;
 use App\Devis\Entite\LectureDeDemande;
