@@ -11,6 +11,8 @@ parameters:
         tarif_kilometrique_centimes: 70
         cout_journee_camionnette_centimes: 10000
         cout_nuitee_centimes: 9000
+        # Retrait de la tapisserie avant la pose d'un mur (Louis, 18/11/2026).
+        frais_retrait_tapisserie_centimes: 30000
         # 0 en franchise de TVA (auto-entrepreneur), 2000 pour 20 %.
         taux_tva_centiemes: 0
         mention_franchise_tva: 'TVA non applicable, art. 293 B du CGI'

@@ -29,6 +29,7 @@ final class FabriqueDeBareme
             tarifKilometrique: self::montant($configuration, 'tarif_kilometrique_centimes'),
             coutJourneeCamionnette: self::montant($configuration, 'cout_journee_camionnette_centimes'),
             coutNuitee: self::montant($configuration, 'cout_nuitee_centimes'),
+            fraisRetraitTapisserie: self::montant($configuration, 'frais_retrait_tapisserie_centimes'),
             tauxTvaCentiemes: self::entier($configuration, 'taux_tva_centiemes'),
             mentionFranchiseTva: self::texteOuNull($configuration, 'mention_franchise_tva'),
         );

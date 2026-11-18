@@ -33,6 +33,8 @@ final readonly class Bareme
         public Montant $coutJourneeCamionnette,
         /** Une nuitée sur place, hébergement compris. */
         public Montant $coutNuitee,
+        /** Retrait de la tapisserie avant la pose d'un mur, forfaitaire. */
+        public Montant $fraisRetraitTapisserie,
         /** Taux de TVA en centièmes de point : 0 en franchise, 2000 pour 20 %. */
         public int $tauxTvaCentiemes,
         /** Mention à porter sur le devis quand le taux est nul. */

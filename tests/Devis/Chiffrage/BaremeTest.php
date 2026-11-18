@@ -41,6 +41,7 @@ final class BaremeTest extends TestCase
             tarifKilometrique: \App\Shared\Montant::enCentimes(70),
             coutJourneeCamionnette: \App\Shared\Montant::enEuros(100),
             coutNuitee: \App\Shared\Montant::enEuros(90),
+            fraisRetraitTapisserie: \App\Shared\Montant::enEuros(300),
             tauxTvaCentiemes: 0,
             mentionFranchiseTva: null,
         );

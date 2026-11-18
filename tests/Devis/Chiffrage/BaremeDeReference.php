@@ -27,6 +27,7 @@ final class BaremeDeReference
             tarifKilometrique: Montant::enCentimes(70),
             coutJourneeCamionnette: Montant::enEuros(100),
             coutNuitee: Montant::enEuros(90),
+            fraisRetraitTapisserie: Montant::enEuros(300),
             tauxTvaCentiemes: $tauxTvaCentiemes,
             mentionFranchiseTva: 0 === $tauxTvaCentiemes
                 ? 'TVA non applicable, art. 293 B du CGI'
