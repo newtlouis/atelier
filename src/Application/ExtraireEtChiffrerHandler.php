@@ -10,8 +10,11 @@ use App\Devis\Chiffrage\DemandeIncomplete;
 use App\Devis\Entite\Demande;
 use App\Devis\Entite\Devis;
 use App\Devis\Entite\DevisRepository;
+use App\Devis\Entite\LectureDeDemande;
+use App\Devis\Entite\LectureRepository;
 use App\Extraction\Aiguillage;
 use App\Extraction\Extracteur;
+use App\Shared\Contrat\IssueDeLecture;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -44,6 +47,7 @@ final readonly class ExtraireEtChiffrerHandler
         private Aiguillage $aiguillage,
         private ChiffreurDeDemande $chiffreur,
         private DevisRepository $devis,
+        private LectureRepository $lectures,
         private LoggerInterface $logger,
     ) {}
 
@@ -68,15 +72,20 @@ final readonly class ExtraireEtChiffrerHandler
             return;
         }
 
-        // Une demande venue du formulaire passe par l'aiguillage, qui évite le
-        // modèle quand le message se lit seul ; une demande saisie à la main
-        // n'a que son texte. La hauteur standard s'applique dans les deux cas.
-        $envoi = $demande->envoiFormulaire();
-        $extraite = (
-            null !== $envoi
-            ? $this->aiguillage->lit($envoi)
-            : $this->extracteur->extrait($demande->texteClient)
-        )->avecHauteurStandard();
+        $lecture = $this->lectures->pour($demande) ?? $this->lireEtEnregistrer($demande);
+
+        if (IssueDeLecture::Chiffrable !== $lecture->issue) {
+            // En attente de distance, questions, catalogue, hors sujet ou
+            // irréalisable : la lecture est enregistrée, la suite est humaine.
+            $this->logger->info('Demande lue, pas de devis automatique', [
+                'demande' => (string) $demande->id,
+                'issue' => $lecture->issue->value,
+            ]);
+
+            return;
+        }
+
+        $extraite = $lecture->demandeExtraite();
 
         try {
             $chiffrage = $this->chiffreur->chiffre($extraite);
@@ -98,5 +107,27 @@ final readonly class ExtraireEtChiffrerHandler
 
         $this->em->persist(new Devis($demande, $chiffrage));
         $this->em->flush();
+    }
+
+    /**
+     * Une demande venue du formulaire passe par l'aiguillage, qui évite le
+     * modèle quand c'est sûr ; une demande saisie à la main n'a que son texte.
+     * La hauteur standard s'applique dans les deux cas. La lecture est
+     * enregistrée aussitôt : si le chiffrage échoue, elle ne sera pas refaite.
+     */
+    private function lireEtEnregistrer(Demande $demande): LectureDeDemande
+    {
+        $envoi = $demande->envoiFormulaire();
+        $extraite = (
+            null !== $envoi
+            ? $this->aiguillage->lit($envoi)
+            : $this->extracteur->extrait($demande->texteClient)
+        )->avecHauteurStandard();
+
+        $lecture = LectureDeDemande::de($demande, $extraite);
+        $this->em->persist($lecture);
+        $this->em->flush();
+
+        return $lecture;
     }
 }

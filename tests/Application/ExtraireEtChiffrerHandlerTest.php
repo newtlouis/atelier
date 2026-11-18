@@ -13,6 +13,8 @@ use App\Devis\Entite\Demande;
 use App\Devis\Entite\Devis;
 use App\Devis\Entite\DevisRepository;
 use App\Devis\Entite\EtatDevis;
+use App\Devis\Entite\LectureDeDemande;
+use App\Devis\Entite\LectureRepository;
 use App\Extraction\Aiguillage;
 use App\Extraction\ExtractionImpossible;
 use App\Extraction\Infrastructure\ExtracteurFactice;
@@ -20,6 +22,8 @@ use App\Extraction\LecteurDeDimensions;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\EnvoiFormulaire;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\IssueDeLecture;
+use App\Shared\Contrat\NatureDemande;
 use App\Tests\Devis\Chiffrage\BaremeDeReference;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -162,6 +166,77 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
         self::assertSame([], $extracteur->textesRecus());
         // Sans distance, pas de devis : c'est à Louis de la saisir.
         self::assertCount(0, $this->em->getRepository(Devis::class)->findAll());
+        $lecture = $this->lectureDe($demande);
+        self::assertSame(IssueDeLecture::QuestionsAuClient, $lecture->issue); // ni distance ni ville
+        self::assertSame(350, $lecture->hauteurMm);
+        self::assertTrue($lecture->hauteurStandard);
+    }
+
+    public function testAvecSaVilleLaVraieDemandeAttendSaDistance(): void
+    {
+        $demande = Demande::depuisFormulaire(new EnvoiFormulaire(
+            idNetlify: 'envoi-40',
+            formulaire: 'devis',
+            recuLe: new DateTimeImmutable('2026-09-07'),
+            emailClient: null,
+            message: '1600*800 mm',
+            projet: 'table-custom',
+            ville: 'Colmar',
+        ));
+        $this->em->persist($demande);
+        $this->em->flush();
+
+        $this->handler(new ExtracteurFactice())(new ExtraireEtChiffrer($demande->id));
+
+        $lecture = $this->lectureDe($demande);
+        self::assertSame(IssueDeLecture::EnAttenteDeDistance, $lecture->issue);
+        self::assertSame('Colmar', $lecture->villeLivraison);
+    }
+
+    public function testUnHorsSujetEstEnregistreSansDevis(): void
+    {
+        $demande = $this->demandePersistee('We build mobile apps. Book a call!');
+        $spam = new DemandeExtraite(
+            famille: null,
+            longueurMm: null,
+            largeurMm: null,
+            hauteurMm: null,
+            surfaceMetresCarres: null,
+            distanceKm: null,
+            nature: NatureDemande::HorsSujet,
+        );
+
+        $this->handler(ExtracteurFactice::renvoyant($spam))(new ExtraireEtChiffrer($demande->id));
+
+        self::assertSame(IssueDeLecture::HorsSujet, $this->lectureDe($demande)->issue);
+        self::assertCount(0, $this->em->getRepository(Devis::class)->findAll());
+    }
+
+    /**
+     * Une demande déjà lue n'est jamais relue : rejouer le message après une
+     * panne du chiffrage ne coûte pas un second appel.
+     */
+    public function testUneDemandeDejaLueNeRappellePasLeModele(): void
+    {
+        $demande = $this->demandePersistee('Une table basse 120 × 60, livrée à 100 km.');
+        $extracteur = ExtracteurFactice::renvoyant($this->tableComplete());
+        $handler = $this->handler($extracteur);
+        $handler(new ExtraireEtChiffrer($demande->id));
+        $this->em->getConnection()->executeStatement('TRUNCATE ligne_devis, devis CASCADE');
+
+        $handler(new ExtraireEtChiffrer($demande->id));
+
+        self::assertCount(1, $extracteur->textesRecus());
+        self::assertCount(1, $this->em->getRepository(Devis::class)->findAll());
+        self::assertCount(1, $this->em->getRepository(LectureDeDemande::class)->findAll());
+    }
+
+    private function lectureDe(Demande $demande): LectureDeDemande
+    {
+        $lecture = new LectureRepository($this->em)->pour($demande);
+        self::assertInstanceOf(LectureDeDemande::class, $lecture);
+
+        return $lecture;
     }
 
     private function tableComplete(): DemandeExtraite
@@ -196,6 +271,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
             new Aiguillage(new LecteurDeDimensions(), $extracteur),
             new ChiffreurDeDemande(new ChiffreurTable($bareme), new ChiffreurMur($bareme)),
             new DevisRepository($this->em),
+            new LectureRepository($this->em),
             new NullLogger(),
         );
     }
