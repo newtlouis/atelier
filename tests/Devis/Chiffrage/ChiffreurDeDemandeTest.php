@@ -10,6 +10,7 @@ use App\Devis\Chiffrage\ChiffreurTable;
 use App\Devis\Chiffrage\DemandeIncomplete;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\SupportMur;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -62,10 +63,26 @@ final class ChiffreurDeDemandeTest extends TestCase
             surfaceMetresCarres: 6,
             distanceKm: 200,
             champsManquants: [],
+            support: SupportMur::Maconne,
         ));
 
         self::assertSame(353_000, $chiffrage->totalHorsTaxes->centimes);
         self::assertCount(4, $chiffrage->lignes);
+    }
+
+    public function testUnMurSurDuBoisNEstJamaisChiffre(): void
+    {
+        $this->expectException(DemandeIncomplete::class);
+
+        $this->chiffreur()->chiffre(new DemandeExtraite(
+            famille: FamilleProduit::Mur,
+            longueurMm: null,
+            largeurMm: null,
+            hauteurMm: null,
+            surfaceMetresCarres: 6,
+            distanceKm: 200,
+            support: SupportMur::Bois,
+        ));
     }
 
     public function testUnChampManquantArreteLeChiffrageAvecLaQuestionAPoser(): void

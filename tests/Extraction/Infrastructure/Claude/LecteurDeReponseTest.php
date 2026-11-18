@@ -137,11 +137,11 @@ final class LecteurDeReponseTest extends TestCase
         // Livraison sur place : 0 km est une vraie valeur.
         $demande = new LecteurDeReponse()->lit(<<<'JSON'
             {
-                "famille": "mur",
-                "longueur_mm": null,
-                "largeur_mm": null,
-                "hauteur_mm": null,
-                "surface_m2": 9,
+                "famille": "table",
+                "longueur_mm": 1200,
+                "largeur_mm": 600,
+                "hauteur_mm": 350,
+                "surface_m2": null,
                 "distance_km": 0,
                 "ville_livraison": null,
                 "champs_manquants": []

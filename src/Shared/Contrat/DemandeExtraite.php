@@ -39,6 +39,7 @@ final readonly class DemandeExtraite
         public ?string $villeLivraison = null,
         public bool $hauteurStandard = false,
         public NatureDemande $nature = NatureDemande::Projet,
+        public ?SupportMur $support = null,
     ) {}
 
     /**
@@ -72,6 +73,7 @@ final readonly class DemandeExtraite
             villeLivraison: $this->villeLivraison,
             hauteurStandard: true,
             nature: $this->nature,
+            support: $this->support,
         );
     }
 
@@ -84,19 +86,10 @@ final readonly class DemandeExtraite
      */
     public function estExploitable(): bool
     {
-        if (NatureDemande::Projet !== $this->nature || [] !== $this->champsManquants) {
-            return false;
-        }
-
-        return match ($this->famille) {
-            FamilleProduit::Table => null !== $this->longueurMm
-                && null !== $this->largeurMm
-                && null !== $this->hauteurMm
-                && null !== $this->distanceKm,
-            FamilleProduit::Mur => null !== $this->surfaceMetresCarres
-                && null !== $this->distanceKm,
-            null => false,
-        };
+        return NatureDemande::Projet === $this->nature
+            && [] === $this->champsManquants
+            && null !== $this->distanceKm
+            && $this->donneesCompletesHorsDistance();
     }
 
     /**
@@ -108,6 +101,7 @@ final readonly class DemandeExtraite
         return match (true) {
             NatureDemande::HorsSujet === $this->nature => IssueDeLecture::HorsSujet,
             NatureDemande::CommandeCatalogue === $this->nature => IssueDeLecture::CommandeCatalogue,
+            FamilleProduit::Mur === $this->famille && SupportMur::Bois === $this->support => IssueDeLecture::Irrealisable,
             $this->estExploitable() => IssueDeLecture::Chiffrable,
             $this->neManqueQueLaDistance() => IssueDeLecture::EnAttenteDeDistance,
             default => IssueDeLecture::QuestionsAuClient,
@@ -131,25 +125,29 @@ final readonly class DemandeExtraite
     /** Vrai si la même demande, kilomètres en plus, serait exploitable. */
     private function neManqueQueLaDistance(): bool
     {
-        if (null !== $this->distanceKm || null === $this->villeLivraison) {
+        if (NatureDemande::Projet !== $this->nature || null !== $this->distanceKm || null === $this->villeLivraison) {
             return false;
         }
 
-        $avecDistance = new self(
-            famille: $this->famille,
-            longueurMm: $this->longueurMm,
-            largeurMm: $this->largeurMm,
-            hauteurMm: $this->hauteurMm,
-            surfaceMetresCarres: $this->surfaceMetresCarres,
-            distanceKm: 0,
-            champsManquants: array_values(array_filter(
-                $this->champsManquants,
-                static fn(string $champ): bool => 'distance' !== strtolower(trim($champ)),
-            )),
-            villeLivraison: $this->villeLivraison,
-            nature: $this->nature,
-        );
+        foreach ($this->champsManquants as $champ) {
+            if ('distance' !== strtolower(trim($champ))) {
+                return false;
+            }
+        }
 
-        return $avecDistance->estExploitable();
+        return $this->donneesCompletesHorsDistance();
+    }
+
+    /** Ce que la famille exige, la distance mise à part. */
+    private function donneesCompletesHorsDistance(): bool
+    {
+        return match ($this->famille) {
+            FamilleProduit::Table => null !== $this->longueurMm
+                && null !== $this->largeurMm
+                && null !== $this->hauteurMm,
+            FamilleProduit::Mur => null !== $this->surfaceMetresCarres
+                && true === $this->support?->estRealisable(),
+            null => false,
+        };
     }
 }

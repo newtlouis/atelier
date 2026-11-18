@@ -8,6 +8,7 @@ use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
 use App\Shared\Contrat\IssueDeLecture;
 use App\Shared\Contrat\NatureDemande;
+use App\Shared\Contrat\SupportMur;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -54,6 +55,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         yield 'sans surface' => ['surface'];
         yield 'sans distance' => ['distance'];
+        yield 'sans support' => ['support'];
     }
 
     public function testSansFamilleRienNEstExploitable(): void
@@ -290,9 +292,87 @@ final class DemandeExtraiteTest extends TestCase
         );
     }
 
-    /** @param list<string> $champsManquants */
-    private static function mur(?string $sans = null, array $champsManquants = []): DemandeExtraite
+    public function testUnMurSurDuBoisEstIrrealisable(): void
     {
+        $mur = self::mur(support: SupportMur::Bois);
+
+        self::assertSame(IssueDeLecture::Irrealisable, $mur->issue());
+        self::assertFalse($mur->estExploitable());
+        self::assertSame('', $mur->questionsAPoser());
+    }
+
+    public function testUnMurSurDuBoisResteIrrealisableMemeIncomplet(): void
+    {
+        self::assertSame(
+            IssueDeLecture::Irrealisable,
+            self::mur(sans: 'surface', champsManquants: ['surface'], support: SupportMur::Bois)->issue(),
+        );
+    }
+
+    public function testUnMurTapisseEstChiffrable(): void
+    {
+        self::assertSame(IssueDeLecture::Chiffrable, self::mur(support: SupportMur::Tapisserie)->issue());
+    }
+
+    public function testUnMurAuSupportInconnuEstUneQuestionAuClient(): void
+    {
+        self::assertSame(IssueDeLecture::QuestionsAuClient, self::mur(sans: 'support')->issue());
+    }
+
+    public function testUnMurSansKilometresAttendSaDistance(): void
+    {
+        $mur = new DemandeExtraite(
+            famille: FamilleProduit::Mur,
+            longueurMm: null,
+            largeurMm: null,
+            hauteurMm: null,
+            surfaceMetresCarres: 6,
+            distanceKm: null,
+            champsManquants: ['distance'],
+            villeLivraison: 'Colmar',
+            support: SupportMur::Placo,
+        );
+
+        self::assertSame(IssueDeLecture::EnAttenteDeDistance, $mur->issue());
+    }
+
+    /** Le support n'a pas de sens pour une table : il ne la rend pas irréalisable. */
+    public function testLeBoisNeConcerneQueLesMurs(): void
+    {
+        $table = new DemandeExtraite(
+            famille: FamilleProduit::Table,
+            longueurMm: 1_200,
+            largeurMm: 600,
+            hauteurMm: 350,
+            surfaceMetresCarres: null,
+            distanceKm: 100,
+            support: SupportMur::Bois,
+        );
+
+        self::assertSame(IssueDeLecture::Chiffrable, $table->issue());
+    }
+
+    public function testLaHauteurStandardGardeLeSupport(): void
+    {
+        $demande = new DemandeExtraite(
+            famille: FamilleProduit::Table,
+            longueurMm: 1_200,
+            largeurMm: 600,
+            hauteurMm: null,
+            surfaceMetresCarres: null,
+            distanceKm: 100,
+            support: SupportMur::Placo,
+        );
+
+        self::assertSame(SupportMur::Placo, $demande->avecHauteurStandard()->support);
+    }
+
+    /** @param list<string> $champsManquants */
+    private static function mur(
+        ?string $sans = null,
+        array $champsManquants = [],
+        SupportMur $support = SupportMur::Maconne,
+    ): DemandeExtraite {
         return new DemandeExtraite(
             famille: FamilleProduit::Mur,
             longueurMm: null,
@@ -301,6 +381,7 @@ final class DemandeExtraiteTest extends TestCase
             surfaceMetresCarres: 'surface' === $sans ? null : 6,
             distanceKm: 'distance' === $sans ? null : 200,
             champsManquants: $champsManquants,
+            support: 'support' === $sans ? null : $support,
         );
     }
 }
