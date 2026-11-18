@@ -34,6 +34,12 @@ services:
     App\Extraction\Extracteur: '@App\Extraction\Infrastructure\Claude\ExtracteurClaude'
     App\Extraction\Cout\JournalDesAppels: '@App\Extraction\Infrastructure\JournalDoctrine'
 
+    App\Devis\SourceDesEnvois: '@App\Devis\Infrastructure\EnvoisNetlify'
+    App\Devis\Infrastructure\EnvoisNetlify:
+        arguments:
+            $jeton: '%env(NETLIFY_TOKEN)%'
+            $idSite: '%env(NETLIFY_SITE_ID)%'
+
     Anthropic\Client:
         arguments:
             $apiKey: '%env(ANTHROPIC_API_KEY)%'
