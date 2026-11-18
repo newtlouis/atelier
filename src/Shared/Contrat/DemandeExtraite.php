@@ -93,6 +93,35 @@ final readonly class DemandeExtraite
     }
 
     /**
+     * Le support indiqué dans le formulaire, qui l'emporte sur celui du
+     * message, sauf si le message parle de bois : un mur irréalisable ne
+     * redevient pas réalisable parce qu'une case a été cochée.
+     */
+    public function avecSupport(?SupportMur $support): self
+    {
+        if (null === $support || SupportMur::Bois === $this->support) {
+            return $this;
+        }
+
+        return new self(
+            famille: $this->famille,
+            longueurMm: $this->longueurMm,
+            largeurMm: $this->largeurMm,
+            hauteurMm: $this->hauteurMm,
+            surfaceMetresCarres: $this->surfaceMetresCarres,
+            distanceKm: $this->distanceKm,
+            champsManquants: array_values(array_filter(
+                $this->champsManquants,
+                static fn(string $champ): bool => !str_starts_with(strtolower(trim($champ)), 'support'),
+            )),
+            villeLivraison: $this->villeLivraison,
+            hauteurStandard: $this->hauteurStandard,
+            nature: $this->nature,
+            support: $support,
+        );
+    }
+
+    /**
      * La suite à donner. Une demande où seuls les kilomètres manquent n'est pas
      * une question au client quand la ville est connue : Louis les calcule.
      */

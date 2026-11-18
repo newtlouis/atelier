@@ -10,20 +10,29 @@ use App\Extraction\LecteurDeDimensions;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\EnvoiFormulaire;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\IssueDeLecture;
+use App\Shared\Contrat\NatureDemande;
+use App\Shared\Contrat\SupportMur;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 final class AiguillageTest extends TestCase
 {
-    private static function envoi(string $message, ?string $projet = 'table-custom', ?string $ville = null): EnvoiFormulaire
-    {
+    private static function envoi(
+        string $message,
+        ?string $projet = 'table-custom',
+        ?string $ville = null,
+        string $formulaire = 'devis',
+        ?string $support = null,
+    ): EnvoiFormulaire {
         return new EnvoiFormulaire(
             idNetlify: 'x',
-            formulaire: 'devis',
+            formulaire: $formulaire,
             recuLe: new DateTimeImmutable('2026-09-07'),
             emailClient: null,
             message: $message,
             projet: $projet,
+            support: $support,
             ville: $ville,
         );
     }
@@ -87,17 +96,57 @@ final class AiguillageTest extends TestCase
     }
 
     /**
-     * Une pièce du catalogue a un prix connu : « 140×70×38 » y décrit une
-     * taille du catalogue, pas une commande sur mesure à chiffrer au m².
+     * Le test de Louis du 29/06/2026, anonymisé : la Travertin XL est au
+     * catalogue à 2 700 €. Chiffrée au m², elle sortirait à 2 450 €.
      */
-    public function testHorsTableSurMesureLesDimensionsNeSuffisentPas(): void
+    public function testUneTableDuCatalogueNEstNiLueNiEnvoyeeAuModele(): void
     {
-        $extracteur = ExtracteurFactice::renvoyant(self::reponseDuModele());
+        $extracteur = new ExtracteurFactice();
 
-        new Aiguillage(new LecteurDeDimensions(), $extracteur)
-            ->lit(self::envoi('140 x 70 x 38 cm', projet: 'table-standard'));
+        $demande = new Aiguillage(new LecteurDeDimensions(), $extracteur)->lit(self::envoi(
+            'Bonjour, je souhaite commander la table Travertin en taille XL (140×70×38, 2 700 €).',
+            projet: 'table-standard',
+            ville: 'Colmar',
+        ));
 
-        self::assertCount(1, $extracteur->textesRecus());
+        self::assertSame([], $extracteur->textesRecus());
+        self::assertSame(NatureDemande::CommandeCatalogue, $demande->nature);
+        self::assertSame(FamilleProduit::Table, $demande->famille);
+        self::assertSame('Colmar', $demande->villeLivraison);
+        self::assertNull($demande->longueurMm);
+        self::assertSame(IssueDeLecture::CommandeCatalogue, $demande->issue());
+    }
+
+    public function testUnePieceDuCatalogueNEstPasEnvoyeeAuModele(): void
+    {
+        $extracteur = new ExtracteurFactice();
+
+        $demande = new Aiguillage(new LecteurDeDimensions(), $extracteur)
+            ->lit(self::envoi('', projet: null, formulaire: 'devis-piece'));
+
+        self::assertSame([], $extracteur->textesRecus());
+        self::assertSame(NatureDemande::CommandeCatalogue, $demande->nature);
+        self::assertNull($demande->famille);
+    }
+
+    public function testLeSupportCocheDansLeFormulaireCompleteLaLectureDuModele(): void
+    {
+        $murSansSupport = new DemandeExtraite(
+            famille: FamilleProduit::Mur,
+            longueurMm: null,
+            largeurMm: null,
+            hauteurMm: null,
+            surfaceMetresCarres: 6,
+            distanceKm: null,
+            champsManquants: ['distance', 'support'],
+            villeLivraison: 'Colmar',
+        );
+
+        $demande = new Aiguillage(new LecteurDeDimensions(), ExtracteurFactice::renvoyant($murSansSupport))
+            ->lit(self::envoi('6 m² dans le salon', projet: null, ville: 'Colmar', formulaire: 'devis-mur', support: 'tapisserie'));
+
+        self::assertSame(SupportMur::Tapisserie, $demande->support);
+        self::assertSame(IssueDeLecture::EnAttenteDeDistance, $demande->issue());
     }
 
     public function testSansProjetLeModeleDecide(): void

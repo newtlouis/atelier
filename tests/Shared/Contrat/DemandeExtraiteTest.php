@@ -367,6 +367,70 @@ final class DemandeExtraiteTest extends TestCase
         self::assertSame(SupportMur::Placo, $demande->avecHauteurStandard()->support);
     }
 
+    public function testLeSupportDuFormulaireCompleteLaDemande(): void
+    {
+        $mur = self::mur(sans: 'support', champsManquants: ['support du mur', 'Support'])
+            ->avecSupport(SupportMur::Tapisserie);
+
+        self::assertSame(SupportMur::Tapisserie, $mur->support);
+        self::assertSame([], $mur->champsManquants);
+        self::assertSame(IssueDeLecture::Chiffrable, $mur->issue());
+    }
+
+    public function testLeSupportDuFormulaireNeRetireQueLeSupportDesChampsManquants(): void
+    {
+        $mur = self::mur(sans: 'support', champsManquants: [' Support', 'surface'])->avecSupport(SupportMur::Placo);
+
+        self::assertSame(['surface'], $mur->champsManquants);
+    }
+
+    public function testLeSupportDuFormulaireGardeLeResteDeLaDemande(): void
+    {
+        $avant = new DemandeExtraite(
+            famille: FamilleProduit::Mur,
+            longueurMm: 1,
+            largeurMm: 2,
+            hauteurMm: 3,
+            surfaceMetresCarres: 6,
+            distanceKm: null,
+            champsManquants: ['distance'],
+            villeLivraison: 'Colmar',
+            hauteurStandard: true,
+            nature: NatureDemande::Projet,
+        );
+
+        self::assertEquals(
+            new DemandeExtraite(
+                famille: FamilleProduit::Mur,
+                longueurMm: 1,
+                largeurMm: 2,
+                hauteurMm: 3,
+                surfaceMetresCarres: 6,
+                distanceKm: null,
+                champsManquants: ['distance'],
+                villeLivraison: 'Colmar',
+                hauteurStandard: true,
+                nature: NatureDemande::Projet,
+                support: SupportMur::Enduit,
+            ),
+            $avant->avecSupport(SupportMur::Enduit),
+        );
+    }
+
+    public function testDuBoisDansLeMessageLEmporteSurLeFormulaire(): void
+    {
+        $mur = self::mur(support: SupportMur::Bois);
+
+        self::assertSame($mur, $mur->avecSupport(SupportMur::Placo));
+    }
+
+    public function testSansSupportDansLeFormulaireRienNeChange(): void
+    {
+        $mur = self::mur(support: SupportMur::Enduit);
+
+        self::assertSame($mur, $mur->avecSupport(null));
+    }
+
     /** @param list<string> $champsManquants */
     private static function mur(
         ?string $sans = null,
