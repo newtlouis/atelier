@@ -13,10 +13,11 @@ final class LecteurDeDimensionsTest extends TestCase
 {
     public function testLaSeuleDemandeReelleSeLitSansModele(): void
     {
-        // Le message exact reçu par le formulaire le 17/11/2026.
+        // Le message exact de la seule vraie demande reçue par le formulaire,
+        // le 07/09/2026, relu dans Netlify. De mémoire, on croyait « 160 × 80 cm ».
         self::assertEquals(
             new DimensionsLues(longueurMm: 1_600, largeurMm: 800),
-            new LecteurDeDimensions()->lit('160 × 80 cm'),
+            new LecteurDeDimensions()->lit('1600*800 mm'),
         );
     }
 
@@ -25,6 +26,7 @@ final class LecteurDeDimensionsTest extends TestCase
     {
         yield 'x minuscule, sans espaces' => ['160x80cm', 1_600, 800, null];
         yield 'étoile' => ['160 * 80 cm', 1_600, 800, null];
+        yield 'croix typographique' => ['160 × 80 cm', 1_600, 800, null];
         yield 'majuscules et espaces autour' => ['  160 X 80 CM ', 1_600, 800, null];
         yield 'trois côtés : la hauteur' => ['120 x 60 x 35 cm', 1_200, 600, 350];
         yield 'mètres décimaux à virgule' => ['1,60 x 0,80 m', 1_600, 800, null];

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Extraction;
 
 /**
- * Lit un message réduit à des dimensions — « 160 × 80 cm », « 1m60 x 80 cm » —
+ * Lit un message réduit à des dimensions — « 1600*800 mm », « 1m60 x 80 cm » —
  * sans appeler de modèle.
  *
- * La seule demande reçue par le formulaire disait exactement « 160 × 80 cm ».
- * Pour ce format, un modèle de langage coûte un centime et trois secondes pour
+ * La seule vraie demande reçue par le formulaire (07/09/2026) disait exactement
+ * « 1600*800 mm ». Pour ce format, un modèle de langage coûte un centime et trois secondes pour
  * un résultat qu'une expression régulière donne sans erreur possible. Le modèle
  * reste réservé aux messages rédigés en phrases.
  *

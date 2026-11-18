@@ -19,8 +19,16 @@ hauteur. Or l'atelier ne fait **que des tables basses**, et la hauteur ne change
 
 ## La preuve
 
-- Une seule demande reçue par formulaire à ce jour : projet « Table — Sur mesure », message
-  « 160 × 80 cm », rien d'autre. C'est le cas réel de référence.
+- Quatre envois au formulaire `devis` à ce jour, relus dans Netlify le 18/11/2026 :
+  - **une seule vraie demande** (07/09/2026) : projet `table-custom`, message « 1600*800 mm »,
+    rien d'autre. C'est le cas réel de référence. De mémoire, Louis la croyait écrite
+    « 160 × 80 cm » : la donnée réelle a corrigé le souvenir ;
+  - deux tests de Louis (29/06/2026), dont une commande d'une pièce du catalogue
+    (« la table Travertin en taille XL, 2 700 € »), cas synthétique utile ;
+  - un spam passé à travers le filtre de Netlify (12/09/2026) : prospection en anglais d'une
+    agence d'applications. Le système doit le classer hors sujet, sans devis ni question.
+- Les valeurs du champ projet sont des identifiants (`table-custom`, `table-standard`), pas les
+  libellés affichés. Le formulaire `commande` (achat en ligne) est hors périmètre.
 - Les deux autres demandes connues sont arrivées par Instagram, en conversation, et ne
   passeront jamais par cette chaîne.
 - Règles métier données par Louis le 17/11/2026 : tables basses uniquement, hauteur standard
@@ -40,9 +48,9 @@ hauteur. Or l'atelier ne fait **que des tables basses**, et la hauteur ne change
 ## Approches envisagées
 
 1. **Retenue — lire d'abord, appeler le modèle seulement si nécessaire.** Les champs du
-   formulaire sont repris tels quels. Un message au format simple (« 160 × 80 cm »,
-   « 1m60 x 80 ») est lu par un analyseur PHP déterministe. Le modèle n'est appelé que pour
-   un message rédigé en phrases. Raison : pour « 160 × 80 cm », un appel au modèle coûte de
+   formulaire sont repris tels quels. Un message au format simple (« 1600*800 mm »,
+   « 1m60 x 80 cm ») est lu par un analyseur PHP déterministe. Le modèle n'est appelé que pour
+   un message rédigé en phrases. Raison : pour « 1600*800 mm », un appel au modèle coûte de
    l'argent et du temps pour un résultat qu'une expression régulière donne sans erreur
    possible.
 2. **Écartée — tout envoyer au modèle.** Plus simple à écrire, mais paie un appel pour la
