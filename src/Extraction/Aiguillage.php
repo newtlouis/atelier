@@ -46,7 +46,23 @@ final readonly class Aiguillage
      */
     public function lit(EnvoiFormulaire $envoi): DemandeExtraite
     {
-        return $this->lecture($envoi)->avecSupport(SupportMur::depuisFormulaire($envoi->support));
+        return $this->lecture($envoi)->avecSupport(self::supportDuFormulaire($envoi->support));
+    }
+
+    /**
+     * The values of the site form's "support" field. "autre" and "je ne sais
+     * pas" (empty value) say nothing: null, hence a question to the client.
+     * The site's vocabulary stays here, with table-custom and devis-piece.
+     */
+    private static function supportDuFormulaire(?string $valeur): ?SupportMur
+    {
+        return match ($valeur) {
+            'mur-maconne' => SupportMur::Maconne,
+            'enduit-peinture' => SupportMur::Enduit,
+            'cloison' => SupportMur::Placo,
+            'tapisserie' => SupportMur::Tapisserie,
+            default => null,
+        };
     }
 
     private function lecture(EnvoiFormulaire $envoi): DemandeExtraite

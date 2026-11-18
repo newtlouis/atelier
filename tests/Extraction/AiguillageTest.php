@@ -14,6 +14,7 @@ use App\Shared\Contrat\IssueDeLecture;
 use App\Shared\Contrat\NatureDemande;
 use App\Shared\Contrat\SupportMur;
 use DateTimeImmutable;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class AiguillageTest extends TestCase
@@ -129,6 +130,37 @@ final class AiguillageTest extends TestCase
         self::assertSame([], $extracteur->textesRecus());
         self::assertSame(NatureDemande::CommandeCatalogue, $demande->nature);
         self::assertNull($demande->famille);
+    }
+
+    /** @return iterable<string, array{string, ?SupportMur}> */
+    public static function supportsDuFormulaire(): iterable
+    {
+        yield 'maçonné' => ['mur-maconne', SupportMur::Maconne];
+        yield 'enduit ou peint' => ['enduit-peinture', SupportMur::Enduit];
+        yield 'cloison' => ['cloison', SupportMur::Placo];
+        yield 'tapissé' => ['tapisserie', SupportMur::Tapisserie];
+        yield 'autre : on demandera' => ['autre', null];
+        yield 'je ne sais pas' => ['', null];
+    }
+
+    #[DataProvider('supportsDuFormulaire')]
+    public function testReadsTheSupportValuesOfTheForm(string $valeur, ?SupportMur $attendu): void
+    {
+        $murSansSupport = new DemandeExtraite(
+            famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
+            longueurMm: null,
+            largeurMm: null,
+            hauteurMm: null,
+            surfaceMetresCarres: 6,
+            distanceKm: null,
+            champsManquants: ['support'],
+        );
+
+        $demande = new Aiguillage(new LecteurDeDimensions(), ExtracteurFactice::renvoyant($murSansSupport))
+            ->lit(self::envoi('6 m²', projet: null, formulaire: 'devis-mur', support: $valeur));
+
+        self::assertSame($attendu, $demande->support);
     }
 
     public function testLeSupportCocheDansLeFormulaireCompleteLaLectureDuModele(): void
