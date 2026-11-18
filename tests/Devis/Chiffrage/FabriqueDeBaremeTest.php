@@ -37,7 +37,7 @@ final class FabriqueDeBaremeTest extends TestCase
         unset($configuration['frais_retrait_tapisserie_centimes']);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('frais_retrait_tapisserie_centimes');
+        $this->expectExceptionMessage('la clé « frais_retrait_tapisserie_centimes » est absente');
 
         FabriqueDeBareme::creer($configuration);
     }
