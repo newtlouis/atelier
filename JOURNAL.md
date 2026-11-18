@@ -5,6 +5,60 @@ dans l'ordre chronologique inverse.
 
 ---
 
+## 2026-11-18 — Real requests, read from the site's forms
+
+The chain started from a "client text" that never existed. Requests arrive through the
+site's Netlify forms: structured fields and a short message. This batch makes them enter
+the workshop, and it is the first one built on real data rather than on a guess.
+
+**The real data corrected memory.** I remembered the only real request as "160 × 80 cm".
+Read back from Netlify, it says "1600*800 mm". Of the four submissions ever received, one
+was a real request, two were my own tests and one was spam that passed Netlify's filter.
+That ratio shaped the design more than any plan did: spam and catalogue orders are cases,
+not noise.
+
+**Read first, call the model only when needed.** A bespoke table whose message is just
+dimensions is read by a regular expression; a catalogue order is recognised from the form
+and never priced. On the four real submissions, the model was called once, for the spam:
+0.0136 $. Priced per square metre, my catalogue Travertin XL would have come out at 2,450 €
+instead of its 2,700 €; that is why a catalogue order is never quoted.
+
+**What broke, and had always been broken.** The extraction schema had never passed a real
+call: the API rejects a type list combined with an enum (400), and no test saw it because the
+suite never calls the API. The Messenger table did not exist either (`auto_setup=0`, the
+recipe's default): the queue had never run outside tests. Both are fixed, and a schema test
+now freezes the rule offline. Lesson: a chain tested only with doubles proves the doubles.
+
+**One written exception to invariant 3.** A bespoke coffee table without a height gets the
+standard 35 cm, applied by the code, announced on the quote, and kept narrow by tests: never
+on a catalogue piece (the real run caught that one, the Travertin is 38 cm), never over a
+height the client gave.
+
+**The kilometres stay human.** The form gives a city, the quote needs kilometres. `app:distance`
+shows the city and a route from Strasbourg, I type the distance, the draft is priced from the
+stored reading without calling the model again. The security review showed why this matters
+beyond convenience: "I'm 5 km away" in a message would otherwise have priced the trip.
+
+**Two reviews, all findings kept.** Security: a delimiter that a nested tag could rebuild,
+terminal escapes in a city that could make me type the wrong distance, unbounded fields that
+could block every import, no cap on what a public form sends to a paid model. Architecture: a
+port with no reason to exist (removed), a default that turned a forgotten nature into a quote,
+the Devis/Infrastructure boundary missing from Deptrac, three copies of the contract with two
+rules for the same thing. Each is its own commit. The three commits above 300 lines stay as
+they are: most of their lines are tests, and splitting would create a table nothing writes.
+
+**Discarded:** the Netlify webhook (no hosting yet), geocoding (a few requests a month do not
+justify it, and a human does not confuse two towns with the same name), a per-city distance
+memory (one more table for a need not yet seen).
+
+**Working alongside a translation.** The repository is moving to English while this batch was
+being written, in the same working tree. Commits were staged from the index only, so that each
+one holds its own subject and none of the translation in progress; the exact HEAD was then
+checked in a separate worktree. Trap found on the way: a worktree that symlinks `vendor` loads
+the main tree's `src`, and proves nothing.
+
+---
+
 ## 2026-11-11 — L'outillage de l'agent, versionné avec le code
 
 Jusqu'ici, les règles destinées à l'agent vivaient dans `CLAUDE.md` : des consignes qu'il

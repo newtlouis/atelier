@@ -1,7 +1,7 @@
 # Traiter les demandes reçues par le formulaire du site
 
 - **Date** : 2026-11-17
-- **Statut** : à valider
+- **Statut** : livré (2026-11-18)
 - **Appétit** : 2 jours. Au-delà, on retire l'import Netlify et on garde une commande qui
   prend un envoi collé à la main.
 
@@ -139,5 +139,67 @@ Changements soumis à accord : **une migration** (commit 6). Ni `deptrac.yaml` n
 Le jeton Netlify va dans `.env.local`, jamais dans le dépôt.
 
 ## Livraison
+
+Delivered on 2026-11-18, local commits only (nothing pushed). **Measurement date:
+2026-12-15** — on that day, `/bilan docs/fiches/2026-11-17-demandes-du-formulaire.md`.
+
+Real run on the four Netlify submissions: 4 imported, 4 readings recorded, 1 model call (the
+spam, 0.0136 $), 0 quotes — expected, since the only real request gives no city. It revealed
+two defects, fixed in their own commits: the standard height stamped on catalogue pieces, and
+"distance" asked of a client who cannot know it.
+
+Reviews (security and architecture, run as the project's reviewers): every finding was checked
+in the code and kept; none discarded. The mutation hunter was not run as an agent: `make
+mutation` gives 100 % covered MSI, and one-off Infection runs on Extraction and Application
+leave only the known equivalent survivors of the dimension reader. The exact HEAD passes style,
+PHPStan level 10, Deptrac and the 253 tests in a clean worktree.
+
+Approvals used: three migrations (submission in Demande, LectureDeDemande, Messenger table) and
+the Devis/Infrastructure boundary in `deptrac.yaml`.
+
+Left for Louis: create the Netlify token with a short expiry (a personal token has every right
+on the account); the per-city distance memory and the webhook, when needed.
+
+- `2cd6045` Fiche : traiter les demandes reçues par le formulaire du site
+- `b2d6164` Passer aux modèles Claude de la génération 5.5
+- `abe23f6` Lire la clé Claude dans .env.local, pas depuis compose
+- `415dc39` Corriger le schéma d'extraction, refusé par l'API
+- `608d5ba` Lire un message réduit à des dimensions sans appeler le modèle
+- `e56cdcb` Fonder le cas réel sur l'envoi relu dans Netlify, pas sur un souvenir
+- `90cce38` Représenter un envoi du formulaire du site, champs et message séparés
+- `e3f801b` Hauteur standard des tables basses : la seule exception à l'invariant 3
+- `2cde01d` Annoncer sur le devis une hauteur standard, ajustable sur demande
+- `83fc305` Garder dans la demande l'envoi de formulaire dont elle vient
+- `f9fb89e` Lire un envoi de formulaire sans le modèle quand c'est sûr
+- `30b7dac` Distinguer un projet d'une commande catalogue ou d'un hors-sujet
+- `2a191d9` Exiger le support d'un mur : le bois le rend irréalisable
+- `77ab1fe` Inscrire au barème le retrait de la tapisserie : 300 € HT
+- `df342d4` Facturer le retrait de la tapisserie sur le devis d'un mur tapissé
+- `807918c` Vérifier qu'une clé de barème absente est dite absente
+- `fda9b66` Reconnaître une commande catalogue sans le modèle, lire le support coché
+- `c37a29c` Schéma v3 : le modèle signale le hors-sujet, le catalogue et le support
+- `ba1f2dd` Enregistrer la lecture de chaque demande et sa suite à donner
+- `36df414` Lire les envois des formulaires du site dans l'API Netlify Forms
+- `76d2d82` Importer les envois du formulaire : app:importer-envois
+- `a22ea38` Compléter une demande avec la distance mesurée par Louis
+- `3496fe9` Saisir la distance des demandes en attente : app:distance
+- `1750a68` Créer la table de la file Messenger par migration
+- `24b37fe` Réserver la hauteur standard aux tables sur mesure
+- `a340eab` Demander au client sa ville, pas une distance qu'il ignore
+- `c068ed7` Draw the Devis/Infrastructure boundary in Deptrac
+- `8f25628` Make the nature of a read request mandatory
+- `debe565` Copy the read-request contract in one place only
+- `3ee218e` Demande: private constructor, one factory per origin
+- `fd0a1ba` Remove the SourceDesEnvois port
+- `a530532` Name the LectureDeDemande factory depuis(), like its neighbours
+- `e781f78` Move SaisieDeDistance into Devis/Chiffrage
+- `080c6f4` File the dimension reader under Extraction/Lecture
+- `ec86542` Move the form's support vocabulary into Aiguillage
+- `04c8684` Never price a trip on a distance the client typed
+- `2b608a5` Neutralise every angle bracket in the client's text
+- `d21745a` Show Louis exactly what the client sent
+- `672bb66` Fit the e-mail and the city into their columns
+- `6d5c709` Cap the size of a text before paying for its reading
+
 
 ## Bilan
