@@ -261,11 +261,22 @@ final class DemandeExtraiteTest extends TestCase
         self::assertSame('', $commande->questionsAPoser());
     }
 
-    public function testLaHauteurStandardGardeLaNature(): void
+    /**
+     * Trouvé à l'essai réel du 18/11/2026 : la Travertin XL du catalogue, haute
+     * de 38 cm, recevait la hauteur standard de 35 cm.
+     */
+    public function testUnePieceDuCatalogueNeRecoitPasLaHauteurStandard(): void
     {
-        $commande = self::table(sans: 'hauteur', nature: NatureDemande::CommandeCatalogue)->avecHauteurStandard();
+        $commande = self::table(sans: 'hauteur', nature: NatureDemande::CommandeCatalogue);
 
-        self::assertSame(NatureDemande::CommandeCatalogue, $commande->nature);
+        self::assertSame($commande, $commande->avecHauteurStandard());
+    }
+
+    public function testUnHorsSujetNeRecoitPasLaHauteurStandard(): void
+    {
+        $spam = self::table(sans: 'hauteur', nature: NatureDemande::HorsSujet);
+
+        self::assertSame($spam, $spam->avecHauteurStandard());
     }
 
     public function testLaDistanceSaisieRendLaDemandeChiffrable(): void

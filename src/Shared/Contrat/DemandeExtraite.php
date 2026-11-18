@@ -56,7 +56,9 @@ final readonly class DemandeExtraite
      */
     public function avecHauteurStandard(): self
     {
-        if (FamilleProduit::Table !== $this->famille || null !== $this->hauteurMm) {
+        // Une pièce du catalogue a sa propre hauteur (la Travertin XL fait
+        // 38 cm) : la règle ne vaut que pour une table sur mesure.
+        if (FamilleProduit::Table !== $this->famille || null !== $this->hauteurMm || NatureDemande::Projet !== $this->nature) {
             return $this;
         }
 
