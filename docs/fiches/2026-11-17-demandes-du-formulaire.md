@@ -73,6 +73,20 @@ Décision 1 **validée le 17/11/2026** : 35 cm sauf si le client demande une aut
 Migration de base **accordée**. Source des demandes : import depuis Netlify (le formulaire
 continue d'y arriver ; `atelier` importe), le webhook viendra avec un hébergement.
 
+Décisions **validées le 18/11/2026**, après lecture des envois réels et du formulaire :
+
+- **Une commande d'une pièce du catalogue n'est jamais chiffrée.** Son prix est connu ; la
+  chiffrer au m² donnerait un faux prix (Travertin XL : 2 450 € calculés pour 2 700 € réels).
+  Issue « commande catalogue », traitée par Louis.
+- **Supports de mur** (valeurs du formulaire) : maçonné, enduit ou peint, cloison (placo) et
+  tapissé sont réalisables ; **le tapissé ajoute 300 € HT de retrait de la tapisserie**,
+  ligne du devis tirée du barème. « Autre » et « je ne sais pas » deviennent une question au
+  client. Le bois, qui ne peut venir que du message, rend le mur irréalisable.
+- **Le spam est classé hors sujet** : ni devis, ni question.
+- **Seconde migration accordée** : le résultat de chaque lecture est enregistré (en attente de
+  distance, questions au client, commande catalogue, hors sujet, irréalisable, chiffrable),
+  sans quoi une demande incomplète ne laisse aucune trace et `app:distance` n'a rien à lister.
+
 1. **La hauteur standard contredit l'invariant 3** (« l'absence d'information ne se comble
    jamais par une valeur par défaut »). Proposition : une exception **écrite et étroite** —
    une hauteur absente sur une table basse vaut 35 cm, et le devis l'affiche (« hauteur
@@ -105,6 +119,19 @@ continue d'y arriver ; `atelier` importe), le webhook viendra avec un hébergeme
 | 7 | Choisir la voie : champs, analyseur, puis modèle | `Application/` + test | — |
 | 8 | Importer les envois depuis Netlify Forms | commande + client HTTP + test (réponse enregistrée) | — |
 | 9 | Saisir la distance d'un devis en attente | commande + transition + test | — |
+
+Révision du 18/11/2026, après les décisions ci-dessus (les commits 1 à 4, 6 et 7 sont faits) :
+
+| # | Commit prévu |
+|---|---|
+| 5a | Nature d'une demande (projet, commande catalogue, hors sujet) et issue de la lecture |
+| 5b | Support du mur : le bois rend le mur irréalisable, un support inconnu se demande |
+| 5c | Retrait de la tapisserie : 300 € HT au barème |
+| 7b | Aiguillage : une commande catalogue sans modèle, le support lu dans le formulaire |
+| 7c | Schéma v3 : le modèle signale le hors-sujet, la commande catalogue et le support |
+| 7d | Enregistrer la lecture de chaque demande (**migration**) |
+| 8 | Importer les envois depuis Netlify Forms |
+| 9 | Saisir la distance d'une demande en attente |
 
 Changements soumis à accord : **une migration** (commit 6). Ni `deptrac.yaml` ni
 `composer.json` (le client HTTP de Symfony est déjà installé).

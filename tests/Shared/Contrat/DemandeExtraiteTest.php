@@ -6,6 +6,8 @@ namespace App\Tests\Shared\Contrat;
 
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\IssueDeLecture;
+use App\Shared\Contrat\NatureDemande;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -180,9 +182,101 @@ final class DemandeExtraiteTest extends TestCase
         self::assertFalse(self::table()->hauteurStandard);
     }
 
-    /** @param list<string> $champsManquants */
-    private static function table(?string $sans = null, array $champsManquants = []): DemandeExtraite
+    public function testUneDemandeCompleteEstChiffrable(): void
     {
+        self::assertSame(IssueDeLecture::Chiffrable, self::table()->issue());
+    }
+
+    /**
+     * La vraie demande : dimensions lues, hauteur standard, ville connue.
+     * Les kilomètres, c'est Louis qui les calcule ; le client n'a rien à ajouter.
+     */
+    public function testSansKilometresMaisAvecLaVilleLaDemandeAttendSaDistance(): void
+    {
+        $demande = self::table(sans: 'distance', champsManquants: [' Distance'], ville: 'Colmar');
+
+        self::assertSame(IssueDeLecture::EnAttenteDeDistance, $demande->issue());
+        self::assertSame('', $demande->questionsAPoser());
+    }
+
+    public function testSansKilometresNiVilleLaQuestionVaAuClient(): void
+    {
+        $demande = self::table(sans: 'distance', champsManquants: ['distance']);
+
+        self::assertSame(IssueDeLecture::QuestionsAuClient, $demande->issue());
+        self::assertSame('Il manque : distance.', $demande->questionsAPoser());
+    }
+
+    public function testSIlManqueAutreChoseQueLaDistanceLaQuestionVaAuClient(): void
+    {
+        $demande = self::table(sans: 'distance', champsManquants: ['distance', 'largeur'], ville: 'Colmar');
+
+        self::assertSame(IssueDeLecture::QuestionsAuClient, $demande->issue());
+    }
+
+    public function testUneDonneeAbsenteAvecLaVilleResteUneQuestion(): void
+    {
+        // La largeur manque sans que le modèle l'ait dit : ce n'est pas qu'une distance.
+        $demande = new DemandeExtraite(
+            famille: FamilleProduit::Table,
+            longueurMm: 1_200,
+            largeurMm: null,
+            hauteurMm: 350,
+            surfaceMetresCarres: null,
+            distanceKm: null,
+            champsManquants: ['distance'],
+            villeLivraison: 'Colmar',
+        );
+
+        self::assertSame(IssueDeLecture::QuestionsAuClient, $demande->issue());
+    }
+
+    public function testUneDistanceConnueNEstJamaisEnAttente(): void
+    {
+        // Une distance donnée mais un doute signalé : la question va au client.
+        $demande = self::table(champsManquants: ['finition'], ville: 'Colmar');
+
+        self::assertSame(IssueDeLecture::QuestionsAuClient, $demande->issue());
+    }
+
+    public function testUnHorsSujetNAppelleNiDevisNiQuestion(): void
+    {
+        $spam = self::table(nature: NatureDemande::HorsSujet);
+
+        self::assertSame(IssueDeLecture::HorsSujet, $spam->issue());
+        self::assertFalse($spam->estExploitable());
+        self::assertSame('', $spam->questionsAPoser());
+    }
+
+    /** Les dimensions d'une pièce du catalogue sont là, mais son prix est déjà fixé. */
+    public function testUneCommandeCatalogueNEstJamaisChiffree(): void
+    {
+        $commande = self::table(nature: NatureDemande::CommandeCatalogue);
+
+        self::assertSame(IssueDeLecture::CommandeCatalogue, $commande->issue());
+        self::assertFalse($commande->estExploitable());
+        self::assertSame('', $commande->questionsAPoser());
+    }
+
+    public function testLaHauteurStandardGardeLaNature(): void
+    {
+        $commande = self::table(sans: 'hauteur', nature: NatureDemande::CommandeCatalogue)->avecHauteurStandard();
+
+        self::assertSame(NatureDemande::CommandeCatalogue, $commande->nature);
+    }
+
+    public function testParDefautUneDemandeEstUnProjet(): void
+    {
+        self::assertSame(NatureDemande::Projet, self::table()->nature);
+    }
+
+    /** @param list<string> $champsManquants */
+    private static function table(
+        ?string $sans = null,
+        array $champsManquants = [],
+        ?string $ville = null,
+        NatureDemande $nature = NatureDemande::Projet,
+    ): DemandeExtraite {
         return new DemandeExtraite(
             famille: FamilleProduit::Table,
             longueurMm: 'longueur' === $sans ? null : 1_200,
@@ -191,6 +285,8 @@ final class DemandeExtraiteTest extends TestCase
             surfaceMetresCarres: null,
             distanceKm: 'distance' === $sans ? null : 100,
             champsManquants: $champsManquants,
+            villeLivraison: $ville,
+            nature: $nature,
         );
     }
 

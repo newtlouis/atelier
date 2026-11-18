@@ -38,6 +38,7 @@ final readonly class DemandeExtraite
         public array $champsManquants = [],
         public ?string $villeLivraison = null,
         public bool $hauteurStandard = false,
+        public NatureDemande $nature = NatureDemande::Projet,
     ) {}
 
     /**
@@ -70,6 +71,7 @@ final readonly class DemandeExtraite
             )),
             villeLivraison: $this->villeLivraison,
             hauteurStandard: true,
+            nature: $this->nature,
         );
     }
 
@@ -82,7 +84,7 @@ final readonly class DemandeExtraite
      */
     public function estExploitable(): bool
     {
-        if ([] !== $this->champsManquants) {
+        if (NatureDemande::Projet !== $this->nature || [] !== $this->champsManquants) {
             return false;
         }
 
@@ -97,10 +99,25 @@ final readonly class DemandeExtraite
         };
     }
 
+    /**
+     * La suite à donner. Une demande où seuls les kilomètres manquent n'est pas
+     * une question au client quand la ville est connue : Louis les calcule.
+     */
+    public function issue(): IssueDeLecture
+    {
+        return match (true) {
+            NatureDemande::HorsSujet === $this->nature => IssueDeLecture::HorsSujet,
+            NatureDemande::CommandeCatalogue === $this->nature => IssueDeLecture::CommandeCatalogue,
+            $this->estExploitable() => IssueDeLecture::Chiffrable,
+            $this->neManqueQueLaDistance() => IssueDeLecture::EnAttenteDeDistance,
+            default => IssueDeLecture::QuestionsAuClient,
+        };
+    }
+
     /** Ce qu'il faut demander au client pour pouvoir chiffrer. */
     public function questionsAPoser(): string
     {
-        if ($this->estExploitable()) {
+        if (IssueDeLecture::QuestionsAuClient !== $this->issue()) {
             return '';
         }
 
@@ -109,5 +126,30 @@ final readonly class DemandeExtraite
             : ['les informations nécessaires au chiffrage'];
 
         return 'Il manque : ' . implode(', ', $manquants) . '.';
+    }
+
+    /** Vrai si la même demande, kilomètres en plus, serait exploitable. */
+    private function neManqueQueLaDistance(): bool
+    {
+        if (null !== $this->distanceKm || null === $this->villeLivraison) {
+            return false;
+        }
+
+        $avecDistance = new self(
+            famille: $this->famille,
+            longueurMm: $this->longueurMm,
+            largeurMm: $this->largeurMm,
+            hauteurMm: $this->hauteurMm,
+            surfaceMetresCarres: $this->surfaceMetresCarres,
+            distanceKm: 0,
+            champsManquants: array_values(array_filter(
+                $this->champsManquants,
+                static fn(string $champ): bool => 'distance' !== strtolower(trim($champ)),
+            )),
+            villeLivraison: $this->villeLivraison,
+            nature: $this->nature,
+        );
+
+        return $avecDistance->estExploitable();
     }
 }
