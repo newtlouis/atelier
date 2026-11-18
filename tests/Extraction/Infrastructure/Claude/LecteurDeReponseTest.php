@@ -7,6 +7,9 @@ namespace App\Tests\Extraction\Infrastructure\Claude;
 use App\Extraction\ExtractionImpossible;
 use App\Extraction\Infrastructure\Claude\LecteurDeReponse;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\IssueDeLecture;
+use App\Shared\Contrat\NatureDemande;
+use App\Shared\Contrat\SupportMur;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +20,8 @@ final class LecteurDeReponseTest extends TestCase
         $demande = new LecteurDeReponse()->lit(<<<'JSON'
             {
                 "famille": "table",
+                "nature": "projet",
+                "support": null,
                 "longueur_mm": 1200,
                 "largeur_mm": 600,
                 "hauteur_mm": 350,
@@ -38,6 +43,8 @@ final class LecteurDeReponseTest extends TestCase
         $demande = new LecteurDeReponse()->lit(<<<'JSON'
             {
                 "famille": "table",
+                "nature": "projet",
+                "support": null,
                 "longueur_mm": 1200,
                 "largeur_mm": 600,
                 "hauteur_mm": null,
@@ -58,6 +65,8 @@ final class LecteurDeReponseTest extends TestCase
         $demande = new LecteurDeReponse()->lit(<<<'JSON'
             {
                 "famille": "mur",
+                "nature": "projet",
+                "support": null,
                 "longueur_mm": null,
                 "largeur_mm": null,
                 "hauteur_mm": null,
@@ -79,6 +88,8 @@ final class LecteurDeReponseTest extends TestCase
         $demande = new LecteurDeReponse()->lit(<<<'JSON'
             {
                 "famille": "table",
+                "nature": "projet",
+                "support": null,
                 "longueur_mm": 1200,
                 "largeur_mm": null,
                 "hauteur_mm": 350,
@@ -138,6 +149,8 @@ final class LecteurDeReponseTest extends TestCase
         $demande = new LecteurDeReponse()->lit(<<<'JSON'
             {
                 "famille": "table",
+                "nature": "projet",
+                "support": null,
                 "longueur_mm": 1200,
                 "largeur_mm": 600,
                 "hauteur_mm": 350,
@@ -150,5 +163,66 @@ final class LecteurDeReponseTest extends TestCase
 
         self::assertSame(0, $demande->distanceKm);
         self::assertTrue($demande->estExploitable());
+    }
+
+    /** Le spam reçu le 12/09/2026, résumé : la nature suffit, aucun champ n'est demandé. */
+    public function testUnHorsSujetSignaleParLeModeleNAppelleRien(): void
+    {
+        $demande = new LecteurDeReponse()->lit(<<<'JSON'
+            {
+                "famille": null,
+                "nature": "hors_sujet",
+                "support": null,
+                "longueur_mm": null,
+                "largeur_mm": null,
+                "hauteur_mm": null,
+                "surface_m2": null,
+                "distance_km": null,
+                "ville_livraison": null,
+                "champs_manquants": []
+            }
+            JSON);
+
+        self::assertSame(NatureDemande::HorsSujet, $demande->nature);
+        self::assertSame(IssueDeLecture::HorsSujet, $demande->issue());
+    }
+
+    public function testUnMurSurDuBoisSignaleParLeModeleEstIrrealisable(): void
+    {
+        $demande = new LecteurDeReponse()->lit(<<<'JSON'
+            {
+                "famille": "mur",
+                "nature": "projet",
+                "support": "bois",
+                "longueur_mm": null,
+                "largeur_mm": null,
+                "hauteur_mm": null,
+                "surface_m2": 8,
+                "distance_km": 30,
+                "ville_livraison": null,
+                "champs_manquants": []
+            }
+            JSON);
+
+        self::assertSame(SupportMur::Bois, $demande->support);
+        self::assertSame(IssueDeLecture::Irrealisable, $demande->issue());
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function natureOuSupportInvalides(): iterable
+    {
+        yield 'nature absente' => ['{"famille": null, "champs_manquants": []}', '« nature » doit être une chaîne'];
+        yield 'nature inconnue' => ['{"famille": null, "nature": "urgent", "champs_manquants": []}', 'nature inconnue : « urgent »'];
+        yield 'support mal typé' => ['{"famille": "mur", "nature": "projet", "support": 3, "champs_manquants": []}', '« support » doit être une chaîne ou null'];
+        yield 'support inconnu' => ['{"famille": "mur", "nature": "projet", "support": "verre", "champs_manquants": []}', 'support inconnu : « verre »'];
+    }
+
+    #[DataProvider('natureOuSupportInvalides')]
+    public function testUneNatureOuUnSupportInvalideEstRejete(string $json, string $motif): void
+    {
+        $this->expectException(ExtractionImpossible::class);
+        $this->expectExceptionMessage($motif);
+
+        new LecteurDeReponse()->lit($json);
     }
 }

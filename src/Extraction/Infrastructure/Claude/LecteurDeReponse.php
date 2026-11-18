@@ -7,6 +7,8 @@ namespace App\Extraction\Infrastructure\Claude;
 use App\Extraction\ExtractionImpossible;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\NatureDemande;
+use App\Shared\Contrat\SupportMur;
 use JsonException;
 
 /**
@@ -49,6 +51,8 @@ final class LecteurDeReponse
             distanceKm: $this->entierPositif($brut['distance_km'] ?? null, 'distance_km', self::DISTANCE_MAX_KM, zeroAutorise: true),
             champsManquants: $this->listeDeTextes($brut['champs_manquants'] ?? []),
             villeLivraison: $this->texteOuNull($brut['ville_livraison'] ?? null),
+            nature: $this->nature($brut['nature'] ?? null),
+            support: $this->support($brut['support'] ?? null),
         );
     }
 
@@ -64,6 +68,29 @@ final class LecteurDeReponse
 
         return FamilleProduit::tryFrom($valeur)
             ?? throw ExtractionImpossible::reponseHorsSchema("famille inconnue : « {$valeur} »");
+    }
+
+    private function nature(mixed $valeur): NatureDemande
+    {
+        if (!\is_string($valeur)) {
+            throw ExtractionImpossible::reponseHorsSchema('« nature » doit être une chaîne');
+        }
+
+        return NatureDemande::tryFrom($valeur)
+            ?? throw ExtractionImpossible::reponseHorsSchema("nature inconnue : « {$valeur} »");
+    }
+
+    private function support(mixed $valeur): ?SupportMur
+    {
+        if (null === $valeur) {
+            return null;
+        }
+        if (!\is_string($valeur)) {
+            throw ExtractionImpossible::reponseHorsSchema('« support » doit être une chaîne ou null');
+        }
+
+        return SupportMur::tryFrom($valeur)
+            ?? throw ExtractionImpossible::reponseHorsSchema("support inconnu : « {$valeur} »");
     }
 
     private function entierPositif(mixed $valeur, string $champ, int $max, bool $zeroAutorise = false): ?int

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Extraction\Infrastructure\Claude;
 
 use App\Extraction\Infrastructure\Claude\SchemaExtraction;
+use App\Shared\Contrat\NatureDemande;
+use App\Shared\Contrat\SupportMur;
 use PHPUnit\Framework\TestCase;
 
 final class SchemaExtractionTest extends TestCase
@@ -42,5 +44,29 @@ final class SchemaExtractionTest extends TestCase
             ],
             $famille['anyOf'] ?? null,
         );
+    }
+
+    public function testLaNatureEtLeSupportSontExigesAvecLesValeursDuContrat(): void
+    {
+        $schema = SchemaExtraction::schema();
+        $proprietes = $schema['properties'];
+        self::assertIsArray($proprietes);
+        self::assertIsArray($proprietes['nature'] ?? null);
+        self::assertIsArray($proprietes['support'] ?? null);
+
+        self::assertSame(
+            array_map(static fn(NatureDemande $n): string => $n->value, NatureDemande::cases()),
+            $proprietes['nature']['enum'] ?? null,
+        );
+        self::assertSame(
+            [
+                ['type' => 'string', 'enum' => array_map(static fn(SupportMur $s): string => $s->value, SupportMur::cases())],
+                ['type' => 'null'],
+            ],
+            $proprietes['support']['anyOf'] ?? null,
+        );
+        self::assertIsArray($schema['required']);
+        self::assertContains('nature', $schema['required']);
+        self::assertContains('support', $schema['required']);
     }
 }
