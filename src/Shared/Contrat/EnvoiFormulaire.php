@@ -57,7 +57,7 @@ final readonly class EnvoiFormulaire
         $this->formulaire = self::obligatoire($formulaire, 'nom du formulaire');
         $this->recuLe = $recuLe;
         $this->emailClient = self::nettoye($emailClient);
-        $this->message = trim($message);
+        $this->message = trim(self::sansControle($message, multiligne: true));
         $this->projet = self::nettoye($projet);
         $this->surface = self::nettoye($surface);
         $this->support = self::nettoye($support);
@@ -96,9 +96,23 @@ final readonly class EnvoiFormulaire
 
     private static function nettoye(?string $valeur): ?string
     {
-        $valeur = trim($valeur ?? '');
+        $valeur = trim(self::sansControle($valeur ?? '', multiligne: false));
 
         return '' !== $valeur ? $valeur : null;
+    }
+
+    /**
+     * The form is public: a field may carry terminal escape sequences, a
+     * carriage return or a bidi override meant to change what Louis reads in
+     * app:distance ("Lyon\e[2K\rStrasbourg" shows Strasbourg). They are
+     * dropped at the door. Only the message keeps its line breaks and tabs.
+     */
+    private static function sansControle(string $valeur, bool $multiligne): string
+    {
+        $valeur = mb_scrub($valeur, 'UTF-8');
+        $motif = $multiligne ? '/(?![\n\t])[\p{Cc}\p{Cf}]/u' : '/[\p{Cc}\p{Cf}]+/u';
+
+        return (string) preg_replace($motif, $multiligne ? '' : ' ', $valeur);
     }
 
     private static function obligatoire(string $valeur, string $nom): string

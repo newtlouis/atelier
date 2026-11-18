@@ -12,6 +12,7 @@ use App\Shared\Contrat\FamilleProduit;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -49,11 +50,13 @@ final class SaisirLesDistancesCommand extends Command
         }
 
         foreach ($enAttente as $lecture) {
-            $ville = (string) $lecture->villeLivraison;
+            // The city comes from a public form, possibly through the model:
+            // escaped, so that "<href=…>" or "<fg=…>" print as text.
+            $ville = OutputFormatter::escape((string) $lecture->villeLivraison);
             $io->section(\sprintf('Demande du %s — %s', $lecture->demande->recueLe->format('d/m/Y'), $this->resume($lecture)));
             $io->text([
                 'Livraison : ' . $ville,
-                'Itinéraire : ' . $this->itineraire($ville),
+                'Itinéraire : ' . $this->itineraire((string) $lecture->villeLivraison),
             ]);
 
             $km = $io->ask('Distance aller en km (vide pour passer)', null, static function (mixed $reponse): ?int {

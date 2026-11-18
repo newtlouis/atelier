@@ -118,6 +118,18 @@ final class SaisirLesDistancesTest extends KernelTestCase
         self::assertStringContainsString('Devis en brouillon : 3 200,00 € HT.', $affichage);
     }
 
+    /** Found in security review: formatter tags in a city print as text. */
+    public function testACityCannotStyleOrLinkTheTerminal(): void
+    {
+        $this->vraieDemandeLue(ville: '<href=https://example.com>Colmar</>');
+        $commande = $this->commande();
+        $commande->setInputs(['']);
+
+        $commande->execute([]);
+
+        self::assertStringContainsString('Livraison : <href=https://example.com>Colmar</>', self::affichage($commande));
+    }
+
     public function testUneReponseVidePasseLaDemandeSansDevis(): void
     {
         $this->vraieDemandeLue();

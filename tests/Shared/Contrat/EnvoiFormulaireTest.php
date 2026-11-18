@@ -110,6 +110,37 @@ final class EnvoiFormulaireTest extends TestCase
         self::assertSame('Message : 1600*800 mm', $envoi->texteClient());
     }
 
+    /** Found in security review: what Louis reads must be what was sent. */
+    public function testTerminalControlCharactersAreDropped(): void
+    {
+        $envoi = new EnvoiFormulaire(
+            idNetlify: 'x',
+            formulaire: 'devis',
+            recuLe: new DateTimeImmutable(),
+            emailClient: null,
+            message: "160 x 80 cm\x1b[31m\nen roche claire\tmerci\r",
+            ville: "Lyon\x1b[2K\rStrasbourg\u{202E}",
+        );
+
+        self::assertSame('Lyon [2K Strasbourg', $envoi->ville);
+        self::assertSame("160 x 80 cm[31m\nen roche claire\tmerci", $envoi->message);
+    }
+
+    public function testInvalidUtf8DoesNotEmptyAField(): void
+    {
+        $envoi = new EnvoiFormulaire(
+            idNetlify: 'x',
+            formulaire: 'devis',
+            recuLe: new DateTimeImmutable(),
+            emailClient: null,
+            message: "Colmar\xff",
+            ville: "Colmar\xff",
+        );
+
+        self::assertSame('Colmar?', $envoi->ville);
+        self::assertSame('Colmar?', $envoi->message);
+    }
+
     public function testUnEnvoiSansIdentifiantEstRefuse(): void
     {
         $this->expectException(InvalidArgumentException::class);
