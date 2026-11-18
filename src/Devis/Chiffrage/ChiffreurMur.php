@@ -43,6 +43,14 @@ final readonly class ChiffreurMur
             ),
         ];
 
+        // Juste après la pose : c'est du travail sur le mur, pas de la logistique.
+        if ($demande->retraitTapisserie) {
+            array_splice($lignes, 1, 0, [new LigneChiffree(
+                'Retrait de la tapisserie avant la pose',
+                $this->bareme->fraisRetraitTapisserie,
+            )]);
+        }
+
         $chiffrage = new Chiffrage(
             $lignes,
             $this->bareme->tauxTvaCentiemes,

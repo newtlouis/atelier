@@ -27,6 +27,26 @@ final class ChiffreurMurTest extends TestCase
         self::assertSame(353_000, $chiffrage->totalHorsTaxes->centimes);     // 3 530 €
     }
 
+    public function testUnMurTapisseAjouteLeRetraitDeLaTapisserieApresLaPose(): void
+    {
+        $chiffrage = $this->chiffreur()->chiffre(
+            new DemandeMur(surfaceMetresCarres: 6, distanceKm: 200, retraitTapisserie: true),
+        );
+
+        self::assertCount(5, $chiffrage->lignes);
+        self::assertSame('Retrait de la tapisserie avant la pose', $chiffrage->lignes[1]->libelle);
+        self::assertSame(30_000, $chiffrage->lignes[1]->montant->centimes);
+        self::assertSame('Location utilitaire — 1 journée', $chiffrage->lignes[2]->libelle);
+        self::assertSame(383_000, $chiffrage->totalHorsTaxes->centimes); // 3 530 € + 300 €
+    }
+
+    public function testSansTapisserieAucunFraisDeRetrait(): void
+    {
+        $chiffrage = $this->chiffreur()->chiffre(new DemandeMur(surfaceMetresCarres: 6, distanceKm: 200));
+
+        self::assertCount(4, $chiffrage->lignes);
+    }
+
     public function testLeDeplacementNEstJamaisOffertMemeSurUnGrosChantier(): void
     {
         // 20 m² = 9 000 € : très au-dessus du seuil qui offrirait une livraison

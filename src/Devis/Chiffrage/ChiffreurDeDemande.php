@@ -6,6 +6,7 @@ namespace App\Devis\Chiffrage;
 
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\SupportMur;
 use LogicException;
 
 /**
@@ -41,6 +42,7 @@ final readonly class ChiffreurDeDemande
             FamilleProduit::Mur => $this->mur->chiffre(new DemandeMur(
                 surfaceMetresCarres: $this->exige($demande->surfaceMetresCarres, 'surface'),
                 distanceKm: $this->exige($demande->distanceKm, 'distance'),
+                retraitTapisserie: SupportMur::Tapisserie === $demande->support,
             )),
             null => throw new DemandeIncomplete($demande),
         };
