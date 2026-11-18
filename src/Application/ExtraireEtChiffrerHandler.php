@@ -10,6 +10,7 @@ use App\Devis\Chiffrage\DemandeIncomplete;
 use App\Devis\Entite\Demande;
 use App\Devis\Entite\Devis;
 use App\Devis\Entite\DevisRepository;
+use App\Extraction\Aiguillage;
 use App\Extraction\Extracteur;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,6 +41,7 @@ final readonly class ExtraireEtChiffrerHandler
     public function __construct(
         private EntityManagerInterface $em,
         private Extracteur $extracteur,
+        private Aiguillage $aiguillage,
         private ChiffreurDeDemande $chiffreur,
         private DevisRepository $devis,
         private LoggerInterface $logger,
@@ -66,7 +68,15 @@ final readonly class ExtraireEtChiffrerHandler
             return;
         }
 
-        $extraite = $this->extracteur->extrait($demande->texteClient);
+        // Une demande venue du formulaire passe par l'aiguillage, qui évite le
+        // modèle quand le message se lit seul ; une demande saisie à la main
+        // n'a que son texte. La hauteur standard s'applique dans les deux cas.
+        $envoi = $demande->envoiFormulaire();
+        $extraite = (
+            null !== $envoi
+            ? $this->aiguillage->lit($envoi)
+            : $this->extracteur->extrait($demande->texteClient)
+        )->avecHauteurStandard();
 
         try {
             $chiffrage = $this->chiffreur->chiffre($extraite);

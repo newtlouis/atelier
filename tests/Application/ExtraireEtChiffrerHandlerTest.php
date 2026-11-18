@@ -13,11 +13,15 @@ use App\Devis\Entite\Demande;
 use App\Devis\Entite\Devis;
 use App\Devis\Entite\DevisRepository;
 use App\Devis\Entite\EtatDevis;
+use App\Extraction\Aiguillage;
 use App\Extraction\ExtractionImpossible;
 use App\Extraction\Infrastructure\ExtracteurFactice;
+use App\Extraction\LecteurDeDimensions;
 use App\Shared\Contrat\DemandeExtraite;
+use App\Shared\Contrat\EnvoiFormulaire;
 use App\Shared\Contrat\FamilleProduit;
 use App\Tests\Devis\Chiffrage\BaremeDeReference;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -119,6 +123,47 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
         self::assertSame([], $extracteur->textesRecus());
     }
 
+    public function testUneDemandeSansHauteurEstChiffreeALaHauteurStandard(): void
+    {
+        $demande = $this->demandePersistee('Une table basse 120 × 60, livrée à 100 km.');
+        $sansHauteur = new DemandeExtraite(
+            famille: FamilleProduit::Table,
+            longueurMm: 1_200,
+            largeurMm: 600,
+            hauteurMm: null,
+            surfaceMetresCarres: null,
+            distanceKm: 100,
+            champsManquants: ['hauteur'],
+        );
+
+        $this->handler(ExtracteurFactice::renvoyant($sansHauteur))(new ExtraireEtChiffrer($demande->id));
+
+        $devis = $this->em->getRepository(Devis::class)->findOneBy(['demande' => $demande]);
+        self::assertInstanceOf(Devis::class, $devis);
+        self::assertSame(194_000, $devis->totalHorsTaxes()->centimes);
+    }
+
+    public function testLaVraieDemandeDuFormulaireSeLitSansModeleEtAttendSaDistance(): void
+    {
+        $demande = Demande::depuisFormulaire(new EnvoiFormulaire(
+            idNetlify: 'envoi-40',
+            formulaire: 'devis',
+            recuLe: new DateTimeImmutable('2026-09-07'),
+            emailClient: null,
+            message: '1600*800 mm',
+            projet: 'table-custom',
+        ));
+        $this->em->persist($demande);
+        $this->em->flush();
+        $extracteur = new ExtracteurFactice();
+
+        $this->handler($extracteur)(new ExtraireEtChiffrer($demande->id));
+
+        self::assertSame([], $extracteur->textesRecus());
+        // Sans distance, pas de devis : c'est à Louis de la saisir.
+        self::assertCount(0, $this->em->getRepository(Devis::class)->findAll());
+    }
+
     private function tableComplete(): DemandeExtraite
     {
         return new DemandeExtraite(
@@ -148,6 +193,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
         return new ExtraireEtChiffrerHandler(
             $this->em,
             $extracteur,
+            new Aiguillage(new LecteurDeDimensions(), $extracteur),
             new ChiffreurDeDemande(new ChiffreurTable($bareme), new ChiffreurMur($bareme)),
             new DevisRepository($this->em),
             new NullLogger(),
