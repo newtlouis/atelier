@@ -38,6 +38,9 @@ use Throwable;
  */
 final readonly class ExtracteurClaude implements Extracteur
 {
+    /** A request runs to a few lines; this is several pages. */
+    public const int TEXTE_MAX_JETONS = 2_000;
+
     public function __construct(
         private Client $client,
         private JournalDesAppels $journal,
@@ -48,6 +51,16 @@ final readonly class ExtracteurClaude implements Extracteur
 
     public function extrait(string $texteClient): DemandeExtraite
     {
+        // Checked before any call: the form is public, and an oversized
+        // message would be billed in full, then again on each retry. The
+        // estimate (one token per three bytes) errs on the high side. The
+        // failure is visible: Messenger retries for free, then parks the
+        // message in the failure transport for Louis to read.
+        $jetonsEstimes = intdiv(\strlen($texteClient) + 2, 3);
+        if ($jetonsEstimes > self::TEXTE_MAX_JETONS) {
+            throw ExtractionImpossible::budgetDepasse($jetonsEstimes, self::TEXTE_MAX_JETONS);
+        }
+
         $debut = microtime(true);
 
         try {
