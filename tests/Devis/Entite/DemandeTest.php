@@ -75,7 +75,7 @@ final class DemandeTest extends TestCase
 
     public function testUneDemandeSaisieALaMainNAPasDEnvoi(): void
     {
-        $demande = new Demande('Une table basse 120 × 60 à 100 km.');
+        $demande = Demande::depuisTexte('Une table basse 120 × 60 à 100 km.');
 
         self::assertNull($demande->envoiFormulaire());
         self::assertNull($demande->idNetlify);
@@ -86,6 +86,6 @@ final class DemandeTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        new Demande('  ');
+        Demande::depuisTexte('  ');
     }
 }

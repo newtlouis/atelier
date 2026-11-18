@@ -53,7 +53,7 @@ final class FactureImmuableTest extends TestCase
             new DemandeTable(longueurMm: 1_200, largeurMm: 600, hauteurMm: 350, distanceLivraisonKm: 100),
         );
 
-        $devis = new Devis(new Demande('Une table basse effet roche, 120 × 60.'), $chiffrage);
+        $devis = new Devis(Demande::depuisTexte('Une table basse effet roche, 120 × 60.'), $chiffrage);
         $devis->envoyer();
         $devis->accepter();
 

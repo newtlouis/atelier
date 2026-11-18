@@ -16,6 +16,7 @@ use App\Devis\Entite\EtatDevis;
 use App\Devis\Entite\LectureDeDemande;
 use App\Devis\Entite\LectureRepository;
 use App\Shared\Contrat\DemandeExtraite;
+use App\Shared\Contrat\EnvoiFormulaire;
 use App\Shared\Contrat\FamilleProduit;
 use App\Shared\Contrat\NatureDemande;
 use App\Shared\Contrat\SupportMur;
@@ -58,7 +59,14 @@ final class SaisirLesDistancesTest extends KernelTestCase
 
     private function lue(DemandeExtraite $extraite, string $recueLe = '2026-09-07'): LectureDeDemande
     {
-        $demande = new Demande('Message : 1600*800 mm', recueLe: new DateTimeImmutable($recueLe));
+        // A backdated request can only come from a form submission, as in reality.
+        $demande = Demande::depuisFormulaire(new EnvoiFormulaire(
+            idNetlify: 'envoi-' . $recueLe . '-' . ($extraite->villeLivraison ?? ''),
+            formulaire: 'devis',
+            recuLe: new DateTimeImmutable($recueLe),
+            emailClient: null,
+            message: '1600*800 mm',
+        ));
         $lecture = LectureDeDemande::de($demande, $extraite);
         $this->em->persist($demande);
         $this->em->persist($lecture);

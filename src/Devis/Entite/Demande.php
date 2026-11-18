@@ -55,14 +55,20 @@ class Demande
     /** Les champs d'un envoi que la demande garde, dans l'ordre du contrat. */
     private const array CHAMPS = ['projet', 'surface', 'support', 'ville', 'piece', 'taille', 'besoin'];
 
-    /** @param array<string, string> $champsFormulaire */
-    public function __construct(
+    /**
+     * Private, as CLAUDE.md asks of immutable entities: a request is born
+     * either from a form submission or from a text typed by hand, through its
+     * factory, and nowhere else can backdate it or attach a Netlify id to it.
+     *
+     * @param array<string, string> $champsFormulaire
+     */
+    private function __construct(
         string $texteClient,
-        ?string $emailClient = null,
-        ?string $idNetlify = null,
-        ?string $formulaire = null,
-        array $champsFormulaire = [],
-        ?DateTimeImmutable $recueLe = null,
+        ?string $emailClient,
+        ?string $idNetlify,
+        ?string $formulaire,
+        array $champsFormulaire,
+        ?DateTimeImmutable $recueLe,
     ) {
         if ('' === trim($texteClient)) {
             throw new InvalidArgumentException("Une demande sans texte n'est pas une demande.");
@@ -75,6 +81,12 @@ class Demande
         $this->idNetlify = $idNetlify;
         $this->formulaire = $formulaire;
         $this->champsFormulaire = $champsFormulaire;
+    }
+
+    /** A request typed by hand: just its text, received now. */
+    public static function depuisTexte(string $texteClient, ?string $emailClient = null): self
+    {
+        return new self($texteClient, $emailClient, null, null, [], null);
     }
 
     /** La date de la demande est celle de l'envoi, pas celle de l'import. */

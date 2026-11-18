@@ -68,8 +68,8 @@ final class DemandePersistanceTest extends KernelTestCase
 
     public function testLesDemandesSaisiesALaMainNeSeGenentPas(): void
     {
-        $this->em->persist(new Demande('Une table basse 120 × 60.'));
-        $this->em->persist(new Demande('Un mur de 6 m².'));
+        $this->em->persist(Demande::depuisTexte('Une table basse 120 × 60.'));
+        $this->em->persist(Demande::depuisTexte('Un mur de 6 m².'));
         $this->em->flush();
 
         self::assertSame(2, $this->em->getRepository(Demande::class)->count([]));

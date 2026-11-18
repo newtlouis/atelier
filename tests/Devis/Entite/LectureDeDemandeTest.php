@@ -31,12 +31,12 @@ final class LectureDeDemandeTest extends TestCase
             support: SupportMur::Tapisserie,
         );
 
-        self::assertEquals($lue, LectureDeDemande::de(new Demande('Un mur.'), $lue)->demandeExtraite());
+        self::assertEquals($lue, LectureDeDemande::de(Demande::depuisTexte('Un mur.'), $lue)->demandeExtraite());
     }
 
     public function testLIssueEstFigeeAuMomentDeLaLecture(): void
     {
-        $demande = new Demande('Un mur.');
+        $demande = Demande::depuisTexte('Un mur.');
         $lue = new DemandeExtraite(
             famille: FamilleProduit::Mur,
             nature: NatureDemande::Projet,

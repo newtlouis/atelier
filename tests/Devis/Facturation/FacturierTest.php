@@ -150,6 +150,6 @@ final class FacturierTest extends KernelTestCase
             new DemandeTable(longueurMm: 1_200, largeurMm: 600, hauteurMm: 350, distanceLivraisonKm: 100),
         );
 
-        return new Devis(new Demande('Une table basse effet roche, 120 × 60.'), $chiffrage);
+        return new Devis(Demande::depuisTexte('Une table basse effet roche, 120 × 60.'), $chiffrage);
     }
 }

@@ -257,7 +257,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
 
     private function demandePersistee(string $texte): Demande
     {
-        $demande = new Demande($texte);
+        $demande = Demande::depuisTexte($texte);
         $this->em->persist($demande);
         $this->em->flush();
 
