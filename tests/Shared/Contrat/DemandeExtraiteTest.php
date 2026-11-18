@@ -204,10 +204,18 @@ final class DemandeExtraiteTest extends TestCase
 
     public function testSansKilometresNiVilleLaQuestionVaAuClient(): void
     {
-        $demande = self::table(sans: 'distance', champsManquants: ['distance']);
+        // La vraie demande du 07/09/2026 : dimensions seules, ni distance ni ville.
+        $demande = self::table(sans: 'distance', champsManquants: [' Distance']);
 
         self::assertSame(IssueDeLecture::QuestionsAuClient, $demande->issue());
-        self::assertSame('Il manque : distance.', $demande->questionsAPoser());
+        self::assertSame('Il manque : ville de livraison.', $demande->questionsAPoser());
+    }
+
+    public function testAvecLaVilleConnueLaDistanceNEstPasDemandeeAuClient(): void
+    {
+        $demande = self::table(sans: 'distance', champsManquants: ['distance', 'largeur'], ville: 'Colmar');
+
+        self::assertSame('Il manque : largeur.', $demande->questionsAPoser());
     }
 
     public function testSIlManqueAutreChoseQueLaDistanceLaQuestionVaAuClient(): void

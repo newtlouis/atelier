@@ -169,16 +169,30 @@ final readonly class DemandeExtraite
         };
     }
 
-    /** Ce qu'il faut demander au client pour pouvoir chiffrer. */
+    /**
+     * Ce qu'il faut demander au client pour pouvoir chiffrer.
+     *
+     * Le client ne connaît pas la distance à l'atelier : on lui demande sa
+     * ville, et Louis calcule les kilomètres. Si la ville est déjà connue, la
+     * distance ne le regarde pas.
+     */
     public function questionsAPoser(): string
     {
         if (IssueDeLecture::QuestionsAuClient !== $this->issue()) {
             return '';
         }
 
-        $manquants = [] !== $this->champsManquants
-            ? $this->champsManquants
-            : ['les informations nécessaires au chiffrage'];
+        $manquants = [];
+        foreach ($this->champsManquants as $champ) {
+            if ('distance' !== strtolower(trim($champ))) {
+                $manquants[] = $champ;
+            } elseif (null === $this->villeLivraison) {
+                $manquants[] = 'ville de livraison';
+            }
+        }
+        if ([] === $manquants) {
+            $manquants = ['les informations nécessaires au chiffrage'];
+        }
 
         return 'Il manque : ' . implode(', ', $manquants) . '.';
     }

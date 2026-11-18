@@ -103,7 +103,7 @@ final class ChiffreurDeDemandeTest extends TestCase
     public function testUnChampManquantArreteLeChiffrageAvecLaQuestionAPoser(): void
     {
         $this->expectException(DemandeIncomplete::class);
-        $this->expectExceptionMessage('Il manque : hauteur, distance.');
+        $this->expectExceptionMessage('Il manque : hauteur, ville de livraison.');
 
         $this->chiffreur()->chiffre(new DemandeExtraite(
             famille: FamilleProduit::Table,
