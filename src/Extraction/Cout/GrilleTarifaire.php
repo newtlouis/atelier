@@ -5,55 +5,54 @@ declare(strict_types=1);
 namespace App\Extraction\Cout;
 
 /**
- * Ce que coûte un jeton, par modèle.
+ * What one token costs, per model.
  *
- * **Unité : le nano-dollar** (un milliardième de dollar), en entier. Trois
- * raisons :
+ * **Unit: the nano-dollar** (one billionth of a dollar), as an integer. Three
+ * reasons:
  *
- * 1. les tarifs d'Anthropic sont libellés en dollars — convertir en euros
- *    exigerait un taux de change, donc une source extérieure, une mise à jour
- *    et une imprécision, pour un chiffre qui ne sert qu'à mesurer ;
- * 2. l'entier évite les flottants, comme partout ailleurs dans ce dépôt ;
- * 3. le nano-dollar permet d'écrire sans arrondi les tarifs fractionnaires :
- *    l'écriture en cache coûte 1,25 fois un jeton d'entrée, soit 125 pour
- *    Haiku 5.5 — un nombre rond ici, impossible en micro-dollars.
+ * 1. Anthropic prices are quoted in dollars — converting to euros would demand
+ *    an exchange rate, therefore an outside source, an update and an
+ *    imprecision, all for a number whose only job is to measure;
+ * 2. integers keep floats out, as everywhere else in this repository;
+ * 3. the nano-dollar expresses fractional rates without rounding: a cache write
+ *    costs 1.25 times an input token, i.e. 125 for Haiku 5.5 — a round number
+ *    here, impossible in micro-dollars.
  *
- * Un appel typique d'extraction sur Opus 5.5 revient à environ 12 millions de
- * nano-dollars, soit 1,2 centime de dollar.
+ * A typical extraction call on Opus 5.5 comes to about 12 million nano-dollars,
+ * that is 1.2 US cents.
  */
 final class GrilleTarifaire
 {
     /**
-     * Tarifs en nano-dollars par jeton.
+     * Rates in nano-dollars per token.
      *
-     * Les modèles de la génération précédente restent dans la grille : les
-     * appels déjà journalisés portent leur identifiant, et leur coût doit
-     * rester calculable. Retirer une ligne effacerait l'historique.
+     * Previous-generation models stay in the table: calls already logged carry
+     * their identifier, and their cost must remain computable. Removing a row
+     * would erase history.
      *
      * @var array<string, array{entree: int, sortie: int, cacheEcriture: int, cacheLecture: int}>
      */
     private const array TARIFS = [
-        // Génération 5.5, tarifs au 17/11/2026.
-        // 4 $ / 20 $ par million ; la relecture du cache est à 0,20 $, un vingtième.
+        // Generation 5.5, rates as of 2026-11-17.
+        // $4 / $20 per million; cache reads are $0.20, a twentieth.
         'claude-opus-5-5' => ['entree' => 4_000, 'sortie' => 20_000, 'cacheEcriture' => 5_000, 'cacheLecture' => 200],
-        // 2 $ / 10 $ par million ; relecture à 0,10 $.
+        // $2 / $10 per million; cache reads at $0.10.
         'claude-sonnet-5-5' => ['entree' => 2_000, 'sortie' => 10_000, 'cacheEcriture' => 2_500, 'cacheLecture' => 100],
-        // 0,10 $ / 0,50 $ par million, pour une requête de moins de 100 000 jetons.
+        // $0.10 / $0.50 per million, for a request under 100,000 tokens.
         'claude-haiku-5-5' => ['entree' => 100, 'sortie' => 500, 'cacheEcriture' => 125, 'cacheLecture' => 10],
 
-        // Génération précédente, tarifs au 26/10/2026.
-        // 5 $ / 25 $ par million de jetons.
+        // Previous generation, rates as of 2026-10-26.
+        // $5 / $25 per million tokens.
         'claude-opus-5' => ['entree' => 5_000, 'sortie' => 25_000, 'cacheEcriture' => 6_250, 'cacheLecture' => 500],
-        // 2 $ / 10 $ par million.
+        // $2 / $10 per million.
         'claude-sonnet-5' => ['entree' => 2_000, 'sortie' => 10_000, 'cacheEcriture' => 2_500, 'cacheLecture' => 200],
-        // 1 $ / 5 $ par million.
+        // $1 / $5 per million.
         'claude-haiku-4-5' => ['entree' => 1_000, 'sortie' => 5_000, 'cacheEcriture' => 1_250, 'cacheLecture' => 100],
     ];
 
     /**
-     * @throws ModeleInconnu plutôt que de renvoyer zéro : un coût silencieusement
-     *                       faux est pire qu'une absence de coût, parce qu'on le
-     *                       croit
+     * @throws ModeleInconnu rather than returning zero: a silently wrong cost is
+     *                       worse than no cost at all, because it gets believed
      */
     public function coutEnNanoDollars(UsageAppel $usage): int
     {
@@ -71,7 +70,7 @@ final class GrilleTarifaire
         return array_keys(self::TARIFS);
     }
 
-    /** Rend « 0,0152 $ » — pour l'affichage seulement. */
+    /** Renders "0,0152 $" (French formatting) — for display only. */
     public static function enDollars(int $nanoDollars): string
     {
         return number_format($nanoDollars / 1_000_000_000, 4, ',', ' ') . ' $';

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Extraction\Cout;
 
 /**
- * Ce qu'a consommé un appel au modèle.
+ * What one call to the model consumed.
  *
- * Volontairement sans notion de coût : les jetons sont un fait, le prix est une
- * grille tarifaire qui change. Le second se calcule à partir du premier, ailleurs.
+ * Deliberately free of any notion of cost: tokens are a fact, price is a rate
+ * card that changes. The second is derived from the first, elsewhere.
  */
 final readonly class UsageAppel
 {
@@ -44,11 +44,11 @@ final readonly class UsageAppel
     }
 
     /**
-     * Le cache a-t-il réellement servi ?
+     * Did the cache actually get used?
      *
-     * La question n'est pas rhétorique : en dessous d'un certain nombre de
-     * jetons, un préfixe n'est pas mis en cache et rien ne le signale. Sans
-     * cette mesure, « on a activé le cache » est une croyance.
+     * The question is not rhetorical: below a certain number of tokens a prefix
+     * is not cached at all, and nothing says so. Without this measurement,
+     * "we turned caching on" is a belief, not a fact.
      */
     public function cacheUtilise(): bool
     {

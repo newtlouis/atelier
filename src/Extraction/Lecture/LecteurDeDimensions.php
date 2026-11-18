@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace App\Extraction\Lecture;
 
 /**
- * Lit un message réduit à des dimensions — « 1600*800 mm », « 1m60 x 80 cm » —
- * sans appeler de modèle.
+ * Reads a message that reduces to dimensions — "1600*800 mm", "1m60 x 80 cm" —
+ * without calling a model.
  *
- * La seule vraie demande reçue par le formulaire (07/09/2026) disait exactement
- * « 1600*800 mm ». Pour ce format, un modèle de langage coûte un centime et trois secondes pour
- * un résultat qu'une expression régulière donne sans erreur possible. Le modèle
- * reste réservé aux messages rédigés en phrases.
+ * The only real request the form has received (2026-09-07) said exactly
+ * "1600*800 mm". For that shape, a language model costs a cent and three
+ * seconds to produce a result a regular expression gets right every time. The
+ * model stays reserved for messages written in sentences.
  *
- * Deux règles de prudence :
+ * Two rules of caution:
  *
- * - **le message entier doit être des dimensions.** « 160 x 80 cm, plutôt en
- *   roche claire » contient autre chose : on ne le lit pas ici, sans quoi la
- *   teinte serait perdue sans que personne le sache ;
- * - **sans unité, on ne lit rien.** « 160 x 80 » vaut-il des centimètres ou des
- *   millimètres ? Deviner, c'est ce que CLAUDE.md interdit. Le message part alors
- *   vers le modèle, qui pose la question.
+ * - **the whole message must be dimensions.** "160 x 80 cm, rather in pale
+ *   rock" carries something else: it is not read here, otherwise the finish
+ *   would be lost without anyone noticing;
+ * - **no unit, no reading.** Is "160 x 80" centimetres or millimetres? Guessing
+ *   is what CLAUDE.md forbids. The message then goes to the model, which asks
+ *   the question.
  */
 final class LecteurDeDimensions
 {
@@ -28,17 +28,17 @@ final class LecteurDeDimensions
     private const string UNITE = '(?:mm|cm|m)';
     private const int DIMENSION_MAX_MM = 10_000;
 
-    /** Millimètres par unité. */
+    /** Millimetres per unit. */
     private const array FACTEURS = ['mm' => 1, 'cm' => 10, 'm' => 1_000];
 
     public function lit(string $message): ?DimensionsLues
     {
-        // strtolower suffit : seules les lettres des unités comptent, et elles sont ASCII.
+        // strtolower is enough: only the unit letters matter, and they are ASCII.
         $texte = strtolower(trim($message));
         $dimension = '(?:\d+m\d{1,2}|' . self::NOMBRE . '\s*' . self::UNITE . '?)';
         $separateur = '\s*[x×*]\s*';
 
-        // L'unité écrite à la fin (« 160 x 80 cm ») est capturée avec le dernier côté.
+        // A unit written at the end ("160 x 80 cm") is captured with the last side.
         $motif = '/^(' . $dimension . ')' . $separateur . '(' . $dimension . ')'
             . '(?:' . $separateur . '(' . $dimension . '))?$/u';
 
@@ -51,23 +51,23 @@ final class LecteurDeDimensions
             $bruts[] = $parties[3];
         }
 
-        // « 160 x 80 cm » : l'unité du dernier côté vaut pour ceux qui n'en ont
-        // pas. « 2 x 1m60 » n'en donne pas : la notation 1m60 finit par un chiffre.
+        // "160 x 80 cm": the unit on the last side applies to the sides without
+        // one. "2 x 1m60" gives none: the 1m60 notation ends with a digit.
         $uniteFinale = 1 === preg_match('/(?:mm|cm|m)$/', $bruts[\count($bruts) - 1], $u) ? $u[0] : '';
 
         $valeurs = [];
         foreach ($bruts as $brut) {
             $millimetres = $this->enMillimetres($brut, $uniteFinale);
-            // « 160 x 80 m » se lirait comme 160 mètres : une faute de frappe
-            // plausible, une table impossible. Même borne que pour la réponse du modèle.
+            // "160 x 80 m" would read as 160 metres: a plausible typo, an
+            // impossible table. Same bound as for the model's response.
             if (null === $millimetres || $millimetres <= 0 || $millimetres > self::DIMENSION_MAX_MM) {
                 return null;
             }
             $valeurs[] = $millimetres;
         }
 
-        // Une table se décrit longueur d'abord, mais un client peut écrire
-        // « 80 x 160 » : la longueur est par définition le plus grand côté.
+        // A table is described length first, but a customer may write
+        // "80 x 160": length is by definition the longer side.
         [$premier, $second] = $valeurs;
 
         return new DimensionsLues(
@@ -78,20 +78,20 @@ final class LecteurDeDimensions
     }
 
     /**
-     * Convertit une dimension en millimètres entiers, sans flottant : la partie
-     * décimale est lue comme une chaîne. Rend null si l'unité manque ou si le
-     * résultat tomberait entre deux millimètres.
+     * Converts a dimension to whole millimetres, with no float: the decimal part
+     * is read as a string. Returns null if the unit is missing, or if the result
+     * would fall between two millimetres.
      */
     private function enMillimetres(string $brut, string $uniteFinale): ?int
     {
         $brut = str_replace(' ', '', $brut);
 
-        // « 1m60 » : des mètres, puis des centimètres sur deux chiffres.
+        // "1m60": metres, then centimetres on two digits.
         if (1 === preg_match('/^(\d+)m(\d{1,2})$/', $brut, $m)) {
             return (int) $m[1] * 1_000 + (int) str_pad($m[2], 2, '0') * 10;
         }
 
-        // Le motif principal garantit déjà cette forme ; la garde sert l'analyse statique.
+        // The main pattern already guarantees this shape; the guard is for static analysis.
         if (1 !== preg_match('/^(\d+)(?:[.,](\d+))?(mm|cm|m)?$/', $brut, $m)) {
             return null;
         }

@@ -16,25 +16,23 @@ use App\Shared\Contrat\DemandeExtraite;
 use Throwable;
 
 /**
- * L'extraction réelle, par l'API Claude.
+ * The real extraction, through the Claude API.
  *
- * Trois choix méritent d'être expliqués.
+ * Three choices are worth explaining.
  *
- * **Schéma brut plutôt que `StructuredOutputModel`.** Le SDK sait dériver un
- * schéma d'une classe PHP, ce qui est plus court à écrire. Mais le schéma est
- * ici une donnée versionnée (`SchemaExtraction::VERSION`) que le rapport
- * d'évaluation doit pouvoir citer : le garder explicite est le but, pas un
- * oubli.
+ * **A raw schema rather than `StructuredOutputModel`.** The SDK can derive a
+ * schema from a PHP class, which is shorter to write. But the schema here is
+ * versioned data (`SchemaExtraction::VERSION`) that an evaluation report has to
+ * be able to quote: keeping it explicit is the point, not an oversight.
  *
- * **La validation reste après l'appel.** Une sortie structurée garantit la
- * forme de la réponse, jamais sa cohérence : `LecteurDeReponse` rejette ce
- * qu'aucun schéma JSON ne peut exprimer — une longueur de 120 000 mm, par
- * exemple.
+ * **Validation stays after the call.** A structured output guarantees the shape
+ * of the response, never its coherence: `LecteurDeReponse` rejects what no JSON
+ * schema can express — a length of 120,000 mm, for instance.
  *
- * **Le texte du client n'est jamais concaténé à la consigne.** Il part dans un
- * message utilisateur distinct, encadré par un délimiteur explicite. C'est la
- * protection minimale contre l'injection de prompt indirecte : la demande d'un
- * client est une donnée, pas une instruction.
+ * **The customer text is never concatenated into the instructions.** It travels
+ * in a separate user message, inside an explicit delimiter. That is the minimum
+ * protection against indirect prompt injection: a customer request is data, not
+ * an instruction.
  */
 final readonly class ExtracteurClaude implements Extracteur
 {
@@ -70,10 +68,10 @@ final readonly class ExtracteurClaude implements Extracteur
                 system: [[
                     'type' => 'text',
                     'text' => SchemaExtraction::consigne(),
-                    // La consigne est identique à chaque appel : mise en cache,
-                    // elle coûte une fraction de son prix en relecture. Le gain
-                    // réel dépend du seuil minimal de mise en cache du modèle —
-                    // il est mesuré, pas supposé (voir JournalDesAppels).
+                    // The instructions are identical on every call: cached, they
+                    // cost a fraction of their price on re-read. The real gain
+                    // depends on the model's minimum caching threshold — it is
+                    // measured, not assumed (see JournalDesAppels).
                     'cache_control' => ['type' => 'ephemeral'],
                 ]],
                 messages: [[
@@ -85,9 +83,9 @@ final readonly class ExtracteurClaude implements Extracteur
                         'type' => 'json_schema',
                         'schema' => SchemaExtraction::schema(),
                     ],
-                    // Extraire des dimensions d'un texte court ne demande pas
-                    // une réflexion profonde ; l'effort est un paramètre que les
-                    // évaluations feront varier.
+                    // Pulling dimensions out of a short text does not call for
+                    // deep reasoning; effort is a parameter the evaluations will
+                    // vary.
                     'effort' => $this->effort,
                 ],
                 thinking: ['type' => 'adaptive'],
@@ -113,9 +111,9 @@ final readonly class ExtracteurClaude implements Extracteur
     }
 
     /**
-     * Encadre la demande par un délimiteur explicite et rappelle, après le
-     * texte, qu'il s'agit de données. L'ordre compte : la dernière instruction
-     * lue est celle qui pèse le plus.
+     * Wraps the request in an explicit delimiter and restates, after the text,
+     * that it is data. Order matters: the last instruction read is the one that
+     * carries the most weight.
      */
     private function encadre(string $texteClient): string
     {
@@ -132,9 +130,9 @@ final readonly class ExtracteurClaude implements Extracteur
     }
 
     /**
-     * Relève la consommation réelle, cache compris. Les quatre compteurs sont
-     * distincts parce qu'ils ne coûtent pas le même prix : écrire dans le cache
-     * coûte plus cher qu'un jeton normal, le relire coûte une fraction.
+     * Records actual consumption, cache included. The four counters are kept
+     * apart because they do not cost the same: writing to the cache costs more
+     * than a normal token, reading from it costs a fraction.
      */
     private function usageDe(Message $message, int $latenceMs): UsageAppel
     {

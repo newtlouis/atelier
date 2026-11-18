@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace App\Extraction\Infrastructure\Claude;
 
 /**
- * Le schéma JSON que le modèle doit respecter, et la consigne qui l'accompagne.
+ * The JSON schema the model must follow, and the instructions that go with it.
  *
- * Versionnés ensemble et volontairement : une évaluation ne compare pas des
- * modèles, elle compare des *versions de prompt*. Sans numéro de version
- * stocké à côté de chaque appel, « est-ce que ma modification a amélioré
- * quelque chose ? » est une question sans réponse.
+ * Versioned together, on purpose: an evaluation does not compare models, it
+ * compares *prompt versions*. Without a version number stored next to every
+ * call, "did my change improve anything?" is a question with no answer.
+ *
+ * The instructions themselves stay in French: customers write in French, and a
+ * prompt is read by the model in the language of the data it processes.
  */
 final class SchemaExtraction
 {
-    /** À incrémenter à chaque modification de la consigne ou du schéma. */
+    /** Bump on every change to the instructions or to the schema. */
     public const string VERSION = 'v3';
 
     public static function consigne(): string
@@ -70,9 +72,9 @@ final class SchemaExtraction
         return [
             'type' => 'object',
             'properties' => [
-                // Une valeur parmi une liste OU null s'écrit avec anyOf. La forme
-                // « type: [string, null] + enum » est refusée par l'API (400) :
-                // la v1 du schéma n'a jamais passé un appel réel.
+                // "One of a list, OR null" is written with anyOf. The form
+                // "type: [string, null] + enum" is rejected by the API (400):
+                // v1 of the schema never survived a real call.
                 'famille' => [
                     'anyOf' => [
                         ['type' => 'string', 'enum' => ['table', 'mur']],

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Extraction\Lecture;
 
 /**
- * Ce qu'un message réduit à des dimensions permet de lire, en millimètres.
- * La hauteur est absente quand le client n'a donné que deux côtés.
+ * What a message that reduces to dimensions yields, in millimetres.
+ * Height is absent when the customer gave only two sides.
  */
 final readonly class DimensionsLues
 {

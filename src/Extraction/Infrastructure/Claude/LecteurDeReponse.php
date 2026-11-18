@@ -13,17 +13,15 @@ use App\Shared\Contrat\SupportMur;
 use JsonException;
 
 /**
- * Transforme la réponse JSON du modèle en objet du domaine.
+ * Turns the model's JSON response into a domain object.
  *
- * Séparé de l'appel réseau pour une raison précise : c'est ici que se trouve
- * tout ce qui peut mal tourner — un champ absent, un type inattendu, une
- * famille inconnue, une dimension négative. Isolé, ce code se teste sur des
- * dizaines de réponses malformées sans dépenser un centime ni dépendre du
- * réseau.
+ * Kept apart from the network call for one precise reason: everything that can
+ * go wrong lives here — a missing field, an unexpected type, an unknown product
+ * family, a negative dimension. Isolated, this code can be tested against dozens
+ * of malformed responses without spending a cent or touching the network.
  *
- * Une sortie structurée *garantit* la forme, mais pas la cohérence : rien
- * n'empêche un modèle de renvoyer une longueur de -500 mm. La validation reste
- * nécessaire.
+ * A structured output *guarantees* shape, but not coherence: nothing stops a
+ * model from returning a length of -500 mm. Validation remains necessary.
  */
 final class LecteurDeReponse
 {
@@ -108,9 +106,8 @@ final class LecteurDeReponse
             throw ExtractionImpossible::reponseHorsSchema("« {$champ} » vaut {$valeur}, ce qui est impossible");
         }
 
-        // Une valeur absurde est plus probablement une hallucination ou une
-        // erreur d'unité qu'une commande réelle : mieux vaut un échec visible
-        // qu'un devis de 40 000 €.
+        // An absurd value is more likely a hallucination or a unit mistake than
+        // a real order: a visible failure beats a 40,000 EUR quote.
         if ($valeur > $max) {
             throw ExtractionImpossible::reponseHorsSchema(
                 "« {$champ} » vaut {$valeur}, au-delà du maximum plausible de {$max}",

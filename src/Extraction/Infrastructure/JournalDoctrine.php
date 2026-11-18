@@ -14,12 +14,12 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Écrit la trace en base.
+ * Writes the trace to the database.
  *
- * **Le traçage ne doit jamais faire échouer l'extraction.** Si l'écriture de la
- * mesure échoue, on le consigne dans les journaux et on continue : perdre une
- * ligne de statistique est sans conséquence, perdre un devis client ne l'est
- * pas. C'est la hiérarchie inverse de celle qu'on applique à la facturation.
+ * **Tracing must never fail an extraction.** If writing the measurement fails,
+ * it is logged and we carry on: losing a row of statistics has no consequence,
+ * losing a customer quote does. This is the reverse of the hierarchy applied to
+ * invoicing.
  */
 final readonly class JournalDoctrine implements JournalDesAppels
 {
@@ -34,8 +34,8 @@ final readonly class JournalDoctrine implements JournalDesAppels
         try {
             $cout = $this->grille->coutEnNanoDollars($usage);
         } catch (ModeleInconnu $e) {
-            // Un modèle non tarifé mérite une alerte, pas un plantage : il
-            // s'agit le plus souvent d'un nouveau modèle à ajouter à la grille.
+            // A model with no rate deserves an alert, not a crash: most often
+            // it is simply a new model to add to the table.
             $this->logger->warning('Appel au modèle non tarifé', [
                 'modele' => $usage->modele,
                 'exception' => $e,

@@ -8,8 +8,8 @@ use App\Extraction\Cout\JournalDesAppels;
 use App\Extraction\Cout\UsageAppel;
 
 /**
- * Ne retient rien. Utile en test et tant que la persistance n'existe pas :
- * l'extracteur fonctionne sans, le traçage est une préoccupation séparée.
+ * Keeps nothing. Useful in tests, and for as long as persistence does not
+ * exist: the extractor works without it, tracing is a separate concern.
  */
 final class JournalNul implements JournalDesAppels
 {
@@ -21,7 +21,7 @@ final class JournalNul implements JournalDesAppels
         $this->usages[] = $usage;
     }
 
-    /** @return list<UsageAppel> Ce qui a été enregistré, pour les tests. */
+    /** @return list<UsageAppel> What was recorded, for the tests. */
     public function usages(): array
     {
         return $this->usages;

@@ -8,12 +8,12 @@ use RuntimeException;
 use Throwable;
 
 /**
- * L'extraction a échoué — service indisponible, réponse hors schéma, budget
- * dépassé.
+ * Extraction failed: service unavailable, response off-schema, budget exceeded.
  *
- * À distinguer d'une extraction réussie mais incomplète : celle-ci revient
- * normalement, avec ses `champsManquants`. Ici, il n'y a pas de réponse du
- * tout, et le message doit repartir en file de réessai.
+ * Not to be confused with an extraction that succeeded but came back
+ * incomplete: that one returns normally, carrying its `champsManquants`
+ * (*missing fields*). Here there is no response at all, and the message has to
+ * go back onto the retry queue.
  */
 final class ExtractionImpossible extends RuntimeException
 {

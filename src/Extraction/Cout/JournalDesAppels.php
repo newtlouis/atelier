@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Extraction\Cout;
 
 /**
- * Enregistre ce que chaque appel au modèle a consommé.
+ * Records what each call to the model consumed.
  *
- * Une interface, parce que l'extracteur n'a pas à savoir si l'on écrit en base,
- * dans un fichier ou nulle part — et parce que les tests ne doivent pas avoir
- * besoin d'une base pour vérifier un appel.
+ * An interface, because the extractor has no business knowing whether we write
+ * to a database, to a file or nowhere at all — and because the tests must not
+ * need a database to assert on a call.
  */
 interface JournalDesAppels
 {

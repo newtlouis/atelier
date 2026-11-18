@@ -10,14 +10,14 @@ use LogicException;
 use Throwable;
 
 /**
- * Un extracteur qui ne parle à personne : il rejoue des réponses préparées.
+ * An extractor that talks to nobody: it replays prepared responses.
  *
- * Sert aux tests, mais aussi au développement et aux démonstrations sans clé
- * d'API. Toute la chaîne — réception, chiffrage, devis — se met au point sans
- * dépenser un centime ; l'appel réel n'intervient qu'au tout dernier moment.
+ * Used by the tests, but also in development and for demos with no API key. The
+ * whole chain — intake, pricing, quote — can be worked on without spending a
+ * cent; the real call only comes in at the very end.
  *
- * Il vit dans src/ et non dans tests/ pour cette raison : c'est un composant
- * utilisable en développement, pas seulement un accessoire de test.
+ * It lives in src/ rather than tests/ for that reason: it is a component usable
+ * in development, not merely a test fixture.
  */
 final class ExtracteurFactice implements Extracteur
 {
@@ -62,7 +62,7 @@ final class ExtracteurFactice implements Extracteur
         return $reponse;
     }
 
-    /** @return list<string> Ce qui a réellement été soumis, dans l'ordre. */
+    /** @return list<string> What was actually submitted, in order. */
     public function textesRecus(): array
     {
         return $this->textesRecus;

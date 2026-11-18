@@ -10,23 +10,23 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * La trace d'un appel au modèle : ce qu'il a consommé, coûté, et combien de
- * temps il a pris.
+ * The trace of one call to the model: what it consumed, what it cost, and how
+ * long it took.
  *
- * Sans cette table, « combien coûte une extraction ? » et « ma nouvelle
- * version de prompt est-elle meilleure ? » sont des questions sans réponse.
+ * Without this table, "how much does an extraction cost?" and "is my new
+ * prompt version any better?" are questions with no answer.
  *
- * Les échecs sont enregistrés au même titre que les succès : un taux d'échec
- * invisible est un taux d'échec qu'on ne corrige pas.
+ * Failures are recorded alongside successes: a failure rate nobody can see is
+ * a failure rate nobody fixes.
  *
- * **Propriétés publiques en lecture seule, pas de mutateurs.** Cette entité
- * est écrite une fois et jamais modifiée ; `readonly` l'impose au niveau du
- * langage, ce qui rend onze accesseurs inutiles. Doctrine hydrate sans passer
- * par le constructeur, donc il écrit une propriété encore non initialisée —
- * ce que `readonly` autorise.
+ * **Public readonly properties, no setters.** This entity is written once and
+ * never modified; `readonly` enforces that at language level, which makes
+ * eleven getters pointless. Doctrine hydrates without going through the
+ * constructor, so it writes a property that is still uninitialised — which
+ * `readonly` permits.
  *
- * Le constructeur est privé et promu : les champs viennent d'un `UsageAppel`,
- * et la fabrique évite onze arguments à l'appel.
+ * The constructor is private and promoted: the fields come from an
+ * `UsageAppel`, and the factory saves the caller eleven arguments.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'appel_llm')]
@@ -51,8 +51,8 @@ class AppelLlm
         #[ORM\Column(type: Types::INTEGER)]
         public readonly int $tokensCacheLecture,
 
-        // BIGINT plutôt qu'INTEGER : un cumul annuel de nano-dollars dépasse
-        // vite les deux milliards. PHP gère l'entier 64 bits sans difficulté.
+        // BIGINT rather than INTEGER: a yearly total in nano-dollars passes two
+        // billion quickly. PHP handles 64-bit integers without trouble.
         #[ORM\Column(type: Types::BIGINT)]
         public readonly int $coutNanoDollars,
         #[ORM\Column(type: Types::INTEGER)]
