@@ -36,6 +36,7 @@ final readonly class ChiffreurDeDemande
                 largeurMm: $this->exige($demande->largeurMm, 'largeur'),
                 hauteurMm: $this->exige($demande->hauteurMm, 'hauteur'),
                 distanceLivraisonKm: $this->exige($demande->distanceKm, 'distance'),
+                hauteurStandard: $demande->hauteurStandard,
             )),
             FamilleProduit::Mur => $this->mur->chiffre(new DemandeMur(
                 surfaceMetresCarres: $this->exige($demande->surfaceMetresCarres, 'surface'),

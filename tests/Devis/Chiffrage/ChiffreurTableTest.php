@@ -22,6 +22,31 @@ final class ChiffreurTableTest extends TestCase
         self::assertSame('1 800,00 €', (string) $chiffrage->lignes[0]->montant);
     }
 
+    public function testLeLibelleDecritLaTableTelleQueDemandee(): void
+    {
+        $chiffrage = $this->chiffreur()->chiffre(
+            new DemandeTable(longueurMm: 1_600, largeurMm: 800, hauteurMm: 420, distanceLivraisonKm: 50),
+        );
+
+        self::assertSame('Table effet roche 160 × 80 × 42 cm — plateau 12800 cm²', $chiffrage->lignes[0]->libelle);
+    }
+
+    public function testUneHauteurStandardEstAnnonceeAuClient(): void
+    {
+        $chiffrage = $this->chiffreur()->chiffre(new DemandeTable(
+            longueurMm: 1_600,
+            largeurMm: 800,
+            hauteurMm: 350,
+            distanceLivraisonKm: 50,
+            hauteurStandard: true,
+        ));
+
+        self::assertSame(
+            'Table effet roche 160 × 80 × 35 cm (hauteur standard, ajustable sur demande) — plateau 12800 cm²',
+            $chiffrage->lignes[0]->libelle,
+        );
+    }
+
     public function testLaLivraisonEstOfferteAuDessusDeDeuxMilleEurosEtSousMilleKilometres(): void
     {
         $chiffrage = $this->chiffreur()->chiffre(

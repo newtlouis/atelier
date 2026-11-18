@@ -31,10 +31,11 @@ final readonly class ChiffreurTable
         $lignes = [
             new LigneChiffree(
                 \sprintf(
-                    'Table effet roche %d × %d × %d cm — plateau %d cm²',
+                    'Table effet roche %d × %d × %d cm%s — plateau %d cm²',
                     intdiv($demande->longueurMm, 10),
                     intdiv($demande->largeurMm, 10),
                     intdiv($demande->hauteurMm, 10),
+                    $demande->hauteurStandard ? ' (hauteur standard, ajustable sur demande)' : '',
                     $plateau->centimetresCarres,
                 ),
                 $prixTable,
