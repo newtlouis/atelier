@@ -2,118 +2,156 @@
 
 [![CI](https://github.com/newtlouis/atelier/actions/workflows/ci.yml/badge.svg)](https://github.com/newtlouis/atelier/actions/workflows/ci.yml)
 
-**Une demande client en texte libre devient un devis chiffré, traçable et auditable.**
+**A free-text customer request becomes a priced, traceable, auditable quote.**
 
-Back-office d'un atelier d'ébénisterie : un client décrit ce qu'il veut en quelques
-phrases, l'application en extrait une demande structurée, la chiffre, et produit un
-devis puis une facture.
+Back-office for a furniture workshop: a customer describes what they want in a few
+sentences, the application extracts a structured request from it, prices it, and issues
+a quote and then an invoice.
 
-> **En construction.** Ce dépôt est publié depuis son premier jour : le squelette
-> démarre et la CI passe. Les fonctionnalités arrivent lot par lot — voir
-> [le journal](JOURNAL.md).
+> **Work in progress.** This repository has been public since day one: the skeleton runs
+> and CI passes. Features land batch by batch — see [the journal](JOURNAL.md).
+> *(Version française de ce README : [README.fr.md](README.fr.md).)*
 
-## Démarrer
+## The LLM part, and what keeps it honest
+
+The model reads text. It never decides a price. Everything below is in
+[`src/Extraction/`](src/Extraction).
+
+- **Structured output with a versioned schema.** The JSON schema is written by hand
+  rather than derived from a PHP class, because `SchemaExtraction::VERSION` is data an
+  evaluation report has to be able to quote. Every logged call carries the prompt version
+  that produced it.
+- **Validation lives after the call.** A structured output guarantees the shape of a
+  response, never its coherence: nothing stops a model from returning a length of
+  -500 mm. [`LecteurDeReponse`](src/Extraction/Infrastructure/Claude/LecteurDeReponse.php)
+  (*"response reader"*) rejects what no JSON schema can express, and it is isolated from
+  the network call so it can be tested against dozens of malformed responses without
+  spending a cent.
+- **Indirect prompt injection is treated as the default case.** The customer text is
+  never concatenated into the instructions. It travels in its own user message, inside an
+  explicit delimiter, with a reminder *after* the text that what it contains is data and
+  not instructions — last instruction read carries the most weight. A model refusal and a
+  service outage are both handled as ordinary outcomes, not as exceptions to fix later.
+- **Every call is costed and timed.** [`Extraction/Cout/`](src/Extraction/Cout)
+  (*"cost"*) logs the model, the prompt version, the latency, the failure if any, and four
+  separate token counters — input, output, cache write, cache read — because they do not
+  cost the same. Prices live in a per-model table in nano-dollars, integers only. One
+  extraction runs at roughly 1.2 ¢ on Opus 5.5.
+- **The cheapest call is the one you do not make.**
+  [`Aiguillage`](src/Extraction/Aiguillage.php) (*"routing"*) answers without the model
+  when the answer is already known — a catalogue order has a fixed price, and a message
+  that reduces to dimensions is parsed directly. Anything else, down to one extra word,
+  goes to the model with the form fields attached.
+
+**Next up:** an evaluation set over golden cases, so that a change of prompt, model or
+effort level can be shown to improve something rather than assumed to. Half the cases are
+deliberately hostile: incomplete, contradictory, off-topic, or carrying an injection
+attempt.
+
+## Getting started
 
 ```bash
-make up     # construit, démarre, installe les dépendances → http://localhost:8080
-make test   # la suite de tests
+make up     # build, start, install dependencies → http://localhost:8080
+make test   # the test suite
 ```
 
-`make` seul liste les commandes disponibles. Il n'y a rien à installer en local
-hormis un moteur de conteneurs (Docker ou OrbStack) : PHP 8.4 et PostgreSQL 16
-tournent dans les conteneurs.
+`make` on its own lists the available commands. Nothing is installed locally beyond a
+container engine (Docker or OrbStack): PHP 8.4 and PostgreSQL 16 run in containers.
 
-## Ce qui est déjà en place
+## What is already in place
 
-- Symfony 7.4 LTS sur PHP 8.4, servi par FrankenPHP
+- Symfony 7.4 LTS on PHP 8.4, served by FrankenPHP
 - PostgreSQL 16
-- PHPStan **niveau 10**
-- Deptrac : un domaine qui en appelle un autre fait échouer la CI
-- **Infection : MSI 100 %** — la suite détecte 203 mutations sur 203
+- PHPStan **level 10**
+- Deptrac: one domain calling into another fails CI
+- **Infection: MSI 100 %** — the suite catches 203 mutations out of 203
 - PHP CS Fixer, `composer audit`
-- une CI qui lance **exactement** les commandes ci-dessus
+- CI that runs **exactly** the commands above
 
-## Pourquoi le test de mutation plutôt que la couverture
+## Why mutation testing rather than coverage
 
-La couverture dit quelles lignes ont été exécutées, pas si quelqu'un regardait.
-Une suite peut couvrir 100 % du code sans rien affirmer.
+Coverage tells you which lines ran, not whether anyone was watching. A suite can cover
+100 % of the code while asserting nothing.
 
-Infection modifie le code — remplace un `<=` par un `<`, inverse un ternaire,
-supprime un appel — et vérifie qu'un test proteste. Sur ce dépôt, il a trouvé
-sept trous invisibles à la couverture, dont une règle de TVA dupliquée entre
-deux calculateurs qui aurait fini par diverger. `make mutation` pour le relancer.
+Infection changes the code — turns a `<=` into a `<`, flips a ternary, drops a call — and
+checks that a test complains. On this repository it found seven holes invisible to
+coverage, including a VAT rule duplicated across two calculators that would eventually
+have drifted apart. `make mutation` to run it again.
 
-## L'architecture, en une ligne
+## The architecture, in one line
 
-Deux domaines — `Extraction` et `Devis` — qui ne communiquent pas directement :
-chacun ne connaît que `Shared`, et seul `Application` a le droit d'en connaître
-deux à la fois. La règle est vérifiée mécaniquement par Deptrac, pas documentée
-dans un wiki.
+Two domains — `Extraction` and `Devis` (*quotes*) — that never talk to each other
+directly: each one knows only `Shared`, and only `Application` is allowed to know two at
+once. The rule is enforced mechanically by Deptrac, not documented in a wiki.
 
-## Le métier déclare, l'infrastructure implémente
+## The domain declares, the infrastructure implements
 
 ```
 src/Extraction/
-├── Extracteur.php            ← l'interface : une méthode, aucune dépendance technique
-├── Cout/                     ← ce que le domaine sait de lui-même : jetons, grille, journal
+├── Extracteur.php            ← the interface: one method, no technical dependency
+├── Cout/                     ← what the domain knows about itself: tokens, pricing, log
 └── Infrastructure/
-    ├── Claude/               ← le SDK Anthropic ne se trouve que là
+    ├── Claude/               ← the Anthropic SDK is found nowhere else
     ├── JournalDoctrine.php
-    └── ExtracteurFactice.php
+    └── ExtracteurFactice.php ← the test double
 ```
 
-`Extracteur` ne connaît pas `ExtracteurClaude`. Ce n'est pas une convention : Deptrac
-traite `Extraction` et `Extraction/Infrastructure` comme deux couches, et la seconde
-seule a le droit de connaître la première. Nommer l'adaptateur depuis le port casse la
-CI — vérifié en provoquant la violation avant d'écrire cette ligne.
+`Extracteur` does not know `ExtracteurClaude`. This is not a convention: Deptrac treats
+`Extraction` and `Extraction/Infrastructure` as two layers, and only the second may know
+the first. Naming the adapter from the port breaks CI — verified by causing the violation
+before writing this line.
 
-Le choix de l'implémentation est fait une seule fois, dans `config/services.yaml` ;
-en test, `config/services_test.yaml` bascule sur une doublure, ce qui garantit qu'aucune
-suite ne peut déclencher un appel facturé.
+The implementation is chosen once, in `config/services.yaml`; in tests,
+`config/services_test.yaml` switches to a double, which guarantees that no suite can ever
+trigger a billed call.
 
-**Ce qui n'est délibérément pas séparé :** les entités de `Devis` portent leurs attributs
-Doctrine, et `DevisRepository` est un dépôt Doctrine. Un modèle de persistance distinct
-doublerait le code pour un gain nul ici. La règle appliquée est plus étroite, et c'est
-celle qui tient : **un port là où l'implémentation peut changer ou coûter de l'argent**
-— le fournisseur de modèle — pas partout par principe.
+**What is deliberately not separated:** the `Devis` entities carry their Doctrine
+attributes, and `DevisRepository` is a Doctrine repository. A separate persistence model
+would double the code for no gain here. The rule actually applied is narrower, and it is
+the one that holds: **a port where the implementation can change or cost money** — the
+model provider — not everywhere on principle.
 
-## Développé avec des agents, sous contrôle
+## Built with agents, under control
 
-Une bonne partie du code de ce dépôt est écrite par Claude Code. Ce qui compte n'est pas
-qui tape, c'est **ce qui empêche un code faux d'arriver sur `main`** — et ce qui garantit
-qu'on a construit la bonne chose. Tout est versionné dans [`.claude/`](.claude) :
+A good part of this code is written by Claude Code. What matters is not who types, it is
+**what stops wrong code from reaching `main`** — and what makes sure the right thing got
+built. All of it is versioned in [`.claude/`](.claude):
 
-| Étape | Ce qui la tient | Où |
+| Stage | What holds it | Where |
 |---|---|---|
-| Cadrer | Une fiche par fonctionnalité : problème, preuve, critère de succès chiffré, appétit, hors périmètre. Validée avant la première ligne de code. | `/feature`, `docs/fiches/` |
-| Écrire | Après chaque fichier : style corrigé, PHPStan niveau 10 sur ce fichier. Avant chaque fichier : refus d'un flottant dans le calcul d'argent, d'un appel au domaine IA depuis le devis, d'un `@phpstan-ignore`. | `.claude/hooks/` |
-| Conclure | L'agent ne peut pas rendre la main sur un dépôt rouge : tests, PHPStan, Deptrac et style tournent à chaque fin de tour. | `barriere-fin-de-tour.sh` |
-| Relire | Deux relecteurs spécialisés en parallèle (sécurité, architecture), et un troisième qui lance Infection sur les fichiers touchés et écrit les tests qui manquent. Chaque constat est vérifié avant d'être retenu. | `.claude/agents/`, `/revue` |
-| Paralléliser | Un lot = un worktree + sa propre pile Docker sur un port libre. | `make bac-a-sable NOM=…` |
-| Livrer | La CI rejoue les commandes du README ; une revue Claude commente chaque pull request. | `.github/workflows/` |
-| Mesurer | À la date fixée dans la fiche, on va chercher la donnée et on décide : garder, ajuster, retirer. | `/bilan` |
+| Frame | One sheet per feature: problem, evidence, measurable success criterion, appetite, out of scope. Approved before the first line of code. | `/feature`, `docs/fiches/` |
+| Write | After each file: style fixed, PHPStan level 10 on that file. Before each file: refusal of a float in money code, of a call into the AI domain from the quote domain, of a `@phpstan-ignore`. | `.claude/hooks/` |
+| Close | The agent cannot hand back control on a red repository: tests, PHPStan, Deptrac and style run at the end of every turn. | `barriere-fin-de-tour.sh` |
+| Review | Two specialised reviewers in parallel (security, architecture), and a third that runs Infection on the touched files and writes the missing tests. Every finding is verified before it is kept. | `.claude/agents/`, `/revue` |
+| Parallelise | One batch = one worktree with its own Docker stack on a free port. | `make bac-a-sable NOM=…` |
+| Ship | CI replays the commands from this README; a Claude review comments on every pull request. | `.github/workflows/` |
+| Measure | On the date set in the sheet, go and get the data, then decide: keep, adjust, drop. | `/bilan` |
 
-**Ce que l'agent ne peut pas faire, par construction et pas par consigne :** pousser,
-lire la clé d'API, détruire les volumes de base de données, régénérer une baseline
-PHPStan, désactiver un test, ou modifier `deptrac.yaml`, `phpstan.neon`, `infection.json5`
-et la CI sans accord explicite. Un agent qui peut abaisser la barrière qui le juge finit
-par le faire. Le mode « bypass » des permissions est désactivé dans ce dépôt.
+**What the agent cannot do, by construction rather than by instruction:** push, read the
+API key, destroy database volumes, regenerate a PHPStan baseline, disable a test, or
+modify `deptrac.yaml`, `phpstan.neon`, `infection.json5` and CI without explicit approval.
+An agent that can lower the bar it is judged against eventually will. Permission bypass
+mode is disabled in this repository.
 
-## Le nommage : français ou anglais ?
+## Naming: French or English?
 
-Les deux, selon une règle simple : **le vocabulaire du métier reste dans la langue du
-métier, l'ossature technique est en anglais.**
+Both, under one rule: **the vocabulary of the business stays in the language of the
+business, the technical skeleton is in English.**
 
-`Devis`, `Facture`, `Bareme`, `Montant`, `Chiffrage` sont français parce que ce sont des
-concepts de droit français : un devis n'est pas un *quote*, et la numérotation des factures
-obéit à l'article 242 nonies A du CGI. Les traduire ajouterait une couche de traduction
-entre ce que dit le comptable et ce que dit le code.
+`Devis`, `Facture`, `Bareme`, `Montant`, `Chiffrage` are French because they are concepts
+of French law: a *devis* is not a quote, and invoice numbering follows article 242 nonies A
+of the French tax code. Translating them would add a layer of translation between what the
+accountant says and what the code says.
 
-`Shared`, `Http`, `Controller`, `Kernel` sont anglais parce qu'ils ne désignent rien du
-métier : ce sont des termes d'architecture et de framework.
+`Shared`, `Http`, `Controller`, `Kernel` are English because they name nothing in the
+business: they are architecture and framework terms.
 
-Corollaire : **pas de chemin à cheval sur les deux langues.** `Shared/Argent/Montant` a
-existé une demi-journée avant d'être corrigé en `Shared/Montant`.
+Corollary: **no path straddling the two languages.** `Shared/Argent/Montant` existed for
+half a day before being corrected to `Shared/Montant`.
+
+Comments and documentation are moving to English file by file, starting with the
+extraction chain. The journal of past decisions ([`JOURNAL.md`](JOURNAL.md)) is still in
+French.
 
 ## Licence
 
