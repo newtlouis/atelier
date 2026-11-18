@@ -28,6 +28,10 @@ services:
         arguments:
             $configuration: '%atelier.bareme%'
 
+    App\Application\SaisirLesDistancesCommand:
+        arguments:
+            $villeAtelier: '%atelier.ville%'
+
     # --- Extraction -------------------------------------------------------
     # Les implémentations sont choisies ici, explicitement : le code ne
     # dépend que des interfaces, et l'environnement décide laquelle sert.

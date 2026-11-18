@@ -1,6 +1,8 @@
 # Le barème commercial. Changer un tarif se fait ici, sans toucher au code et
 # sans redéploiement applicatif. Les montants sont en centimes d'euro.
 parameters:
+    # D'où partent les livraisons et les chantiers : origine du calcul des kilomètres.
+    atelier.ville: 'Strasbourg'
     atelier.bareme:
         # 1 800 € pour un plateau de 120 × 60 cm = 2 500 €/m².
         prix_m2_plateau_centimes: 250000
