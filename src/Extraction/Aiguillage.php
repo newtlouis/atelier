@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Extraction;
 
+use App\Extraction\Lecture\LecteurDeDimensions;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\EnvoiFormulaire;
 use App\Shared\Contrat\FamilleProduit;

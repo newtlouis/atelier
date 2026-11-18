@@ -6,7 +6,7 @@ namespace App\Tests\Extraction;
 
 use App\Extraction\Aiguillage;
 use App\Extraction\Infrastructure\ExtracteurFactice;
-use App\Extraction\LecteurDeDimensions;
+use App\Extraction\Lecture\LecteurDeDimensions;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\EnvoiFormulaire;
 use App\Shared\Contrat\FamilleProduit;

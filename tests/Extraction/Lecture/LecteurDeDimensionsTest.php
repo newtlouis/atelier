@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Extraction;
+namespace App\Tests\Extraction\Lecture;
 
-use App\Extraction\DimensionsLues;
-use App\Extraction\LecteurDeDimensions;
+use App\Extraction\Lecture\DimensionsLues;
+use App\Extraction\Lecture\LecteurDeDimensions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

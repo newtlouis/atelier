@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Lecture;
 
 /**
  * Ce qu'un message réduit à des dimensions permet de lire, en millimètres.

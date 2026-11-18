@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Extraction;
+namespace App\Extraction\Lecture;
 
 /**
  * Lit un message réduit à des dimensions — « 1600*800 mm », « 1m60 x 80 cm » —
