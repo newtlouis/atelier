@@ -92,6 +92,94 @@ final class DemandeExtraiteTest extends TestCase
         );
     }
 
+    public function testUneTableSansHauteurPrendLaHauteurStandard(): void
+    {
+        $demande = self::table(sans: 'hauteur', champsManquants: ['hauteur'])->avecHauteurStandard();
+
+        self::assertSame(350, $demande->hauteurMm);
+        self::assertTrue($demande->hauteurStandard);
+        self::assertSame([], $demande->champsManquants);
+        self::assertTrue($demande->estExploitable());
+    }
+
+    public function testLaHauteurStandardNeRetireQueLaHauteurDesChampsManquants(): void
+    {
+        $demande = self::table(sans: 'hauteur', champsManquants: ['longueur', ' Hauteur_mm', 'distance'])
+            ->avecHauteurStandard();
+
+        self::assertSame(['longueur', 'distance'], $demande->champsManquants);
+        self::assertFalse($demande->estExploitable());
+    }
+
+    public function testLaHauteurStandardGardeLesAutresDonnees(): void
+    {
+        $demande = new DemandeExtraite(
+            famille: FamilleProduit::Table,
+            longueurMm: 1_600,
+            largeurMm: 800,
+            hauteurMm: null,
+            surfaceMetresCarres: null,
+            distanceKm: null,
+            champsManquants: ['hauteur', 'distance'],
+            villeLivraison: 'Strasbourg',
+        );
+
+        self::assertEquals(
+            new DemandeExtraite(
+                famille: FamilleProduit::Table,
+                longueurMm: 1_600,
+                largeurMm: 800,
+                hauteurMm: 350,
+                surfaceMetresCarres: null,
+                distanceKm: null,
+                champsManquants: ['distance'],
+                villeLivraison: 'Strasbourg',
+                hauteurStandard: true,
+            ),
+            $demande->avecHauteurStandard(),
+        );
+    }
+
+    public function testUneHauteurDonneeParLeClientNEstJamaisRemplacee(): void
+    {
+        $demande = new DemandeExtraite(
+            famille: FamilleProduit::Table,
+            longueurMm: 1_200,
+            largeurMm: 600,
+            hauteurMm: 420,
+            surfaceMetresCarres: null,
+            distanceKm: 100,
+        );
+
+        self::assertSame($demande, $demande->avecHauteurStandard());
+    }
+
+    /**
+     * L'exception à l'invariant 3 ne s'étend à rien d'autre : un mur, ou une
+     * demande dont on ignore la famille, ne reçoit aucune valeur par défaut.
+     */
+    public function testLaHauteurStandardNeConcerneQueLesTables(): void
+    {
+        $mur = self::mur(sans: 'surface', champsManquants: ['surface']);
+        $inconnue = new DemandeExtraite(
+            famille: null,
+            longueurMm: null,
+            largeurMm: null,
+            hauteurMm: null,
+            surfaceMetresCarres: null,
+            distanceKm: null,
+            champsManquants: ['famille', 'hauteur'],
+        );
+
+        self::assertSame($mur, $mur->avecHauteurStandard());
+        self::assertSame($inconnue, $inconnue->avecHauteurStandard());
+    }
+
+    public function testParDefautLaHauteurNEstPasStandard(): void
+    {
+        self::assertFalse(self::table()->hauteurStandard);
+    }
+
     /** @param list<string> $champsManquants */
     private static function table(?string $sans = null, array $champsManquants = []): DemandeExtraite
     {

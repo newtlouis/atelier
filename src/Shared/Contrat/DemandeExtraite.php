@@ -18,7 +18,16 @@ namespace App\Shared\Contrat;
  */
 final readonly class DemandeExtraite
 {
-    /** @param list<string> $champsManquants */
+    /**
+     * L'atelier ne fait que des tables basses, toutes à 35 cm sauf demande
+     * contraire (règle de Louis, 17/11/2026). La hauteur n'entre pas dans le prix.
+     */
+    public const int HAUTEUR_STANDARD_TABLE_BASSE_MM = 350;
+
+    /**
+     * @param list<string> $champsManquants
+     * @param bool         $hauteurStandard vrai si la hauteur vient de la règle, pas du client
+     */
     public function __construct(
         public ?FamilleProduit $famille,
         public ?int $longueurMm,
@@ -28,7 +37,41 @@ final readonly class DemandeExtraite
         public ?int $distanceKm,
         public array $champsManquants = [],
         public ?string $villeLivraison = null,
+        public bool $hauteurStandard = false,
     ) {}
+
+    /**
+     * La seule exception écrite à l'invariant 3 (voir CLAUDE.md) : une table
+     * sans hauteur prend la hauteur standard des tables basses.
+     *
+     * Elle est étroite à dessein. Elle ne vaut que pour la hauteur d'une table,
+     * qui ne change pas le prix ; elle est appliquée par le code, jamais par le
+     * modèle, qui continue de signaler la hauteur comme manquante ; et elle
+     * reste visible (`hauteurStandard`) pour que le devis l'annonce au client.
+     * Une hauteur donnée par le client n'est jamais remplacée.
+     */
+    public function avecHauteurStandard(): self
+    {
+        if (FamilleProduit::Table !== $this->famille || null !== $this->hauteurMm) {
+            return $this;
+        }
+
+        return new self(
+            famille: $this->famille,
+            longueurMm: $this->longueurMm,
+            largeurMm: $this->largeurMm,
+            hauteurMm: self::HAUTEUR_STANDARD_TABLE_BASSE_MM,
+            surfaceMetresCarres: $this->surfaceMetresCarres,
+            distanceKm: $this->distanceKm,
+            champsManquants: array_values(array_filter(
+                $this->champsManquants,
+                // Le modèle nomme le champ « hauteur » ou « hauteur_mm ».
+                static fn(string $champ): bool => !str_starts_with(strtolower(trim($champ)), 'hauteur'),
+            )),
+            villeLivraison: $this->villeLivraison,
+            hauteurStandard: true,
+        );
+    }
 
     /**
      * Vrai si le chiffrage peut être tenté sans rien inventer.

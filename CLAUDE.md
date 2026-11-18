@@ -29,7 +29,12 @@ qui explique **pourquoi**, pas quoi — le diff dit déjà quoi.
    que `Extraction` et `Devis` ne se connaissent pas.
 2. **Les montants sont des centimes entiers.** Aucun flottant dans le domaine.
 3. **L'absence d'information ne se comble jamais par une valeur par défaut.** On
-   refuse de chiffrer et on pose la question.
+   refuse de chiffrer et on pose la question. **Une seule exception, écrite et étroite**
+   (décidée par Louis le 17/11/2026) : l'atelier ne fait que des tables basses, et une
+   table sans hauteur prend la hauteur standard de 35 cm. Elle est appliquée par le code
+   (`DemandeExtraite::avecHauteurStandard()`), jamais par le modèle ; la hauteur n'entre
+   pas dans le prix, et le devis annonce qu'elle est standard. Toute autre exception
+   passe par Louis et s'écrit ici.
 4. **Une facture émise ne change pas.** Correction par avoir.
 5. **Les outils exposés à un modèle restent en lecture seule.**
 
