@@ -6,6 +6,7 @@ namespace App\Extraction\Infrastructure\Claude;
 
 use App\Extraction\ExtractionImpossible;
 use App\Shared\Contrat\DemandeExtraite;
+use App\Shared\Contrat\EnvoiFormulaire;
 use App\Shared\Contrat\FamilleProduit;
 use App\Shared\Contrat\NatureDemande;
 use App\Shared\Contrat\SupportMur;
@@ -148,6 +149,8 @@ final class LecteurDeReponse
             throw ExtractionImpossible::reponseHorsSchema('« ville_livraison » doit être une chaîne ou null');
         }
 
-        return '' === trim($valeur) ? null : $valeur;
+        // Cut to the column rather than rejected: a rejected answer is retried
+        // by Messenger, and each retry pays for another call.
+        return '' === trim($valeur) ? null : mb_substr($valeur, 0, EnvoiFormulaire::VILLE_MAX);
     }
 }

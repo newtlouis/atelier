@@ -141,6 +141,42 @@ final class EnvoiFormulaireTest extends TestCase
         self::assertSame('Colmar?', $envoi->message);
     }
 
+    /**
+     * Found in security review: a 200-character address made every import
+     * fail on the same submission, and the ones behind it never arrived.
+     */
+    public function testFieldsFitTheirColumns(): void
+    {
+        $envoi = new EnvoiFormulaire(
+            idNetlify: 'x',
+            formulaire: 'devis',
+            recuLe: new DateTimeImmutable(),
+            emailClient: str_repeat('a', 169) . '@example.org',
+            message: '1600*800 mm',
+            ville: str_repeat('é', 121),
+        );
+
+        self::assertNull($envoi->emailClient);
+        self::assertSame(str_repeat('é', 120), $envoi->ville);
+    }
+
+    public function testAnAddressThatFitsIsKept(): void
+    {
+        $adresse = str_repeat('a', 168) . '@example.org';
+
+        $envoi = new EnvoiFormulaire(
+            idNetlify: 'x',
+            formulaire: 'devis',
+            recuLe: new DateTimeImmutable(),
+            emailClient: $adresse,
+            message: '1600*800 mm',
+            ville: str_repeat('é', 120),
+        );
+
+        self::assertSame($adresse, $envoi->emailClient);
+        self::assertSame(str_repeat('é', 120), $envoi->ville);
+    }
+
     public function testUnEnvoiSansIdentifiantEstRefuse(): void
     {
         $this->expectException(InvalidArgumentException::class);

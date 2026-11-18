@@ -39,6 +39,10 @@ final readonly class EnvoiFormulaire
     public ?string $taille;
     public ?string $besoin;
 
+    /** The lengths of the matching columns of Demande and LectureDeDemande. */
+    public const int EMAIL_MAX = 180;
+    public const int VILLE_MAX = 120;
+
     public function __construct(
         string $idNetlify,
         string $formulaire,
@@ -56,12 +60,16 @@ final readonly class EnvoiFormulaire
         $this->idNetlify = self::obligatoire($idNetlify, 'identifiant Netlify');
         $this->formulaire = self::obligatoire($formulaire, 'nom du formulaire');
         $this->recuLe = $recuLe;
-        $this->emailClient = self::nettoye($emailClient);
+        // Bounded to their columns: a field too long for the database would
+        // stop every later import at the same submission. An address longer
+        // than the column is not one we could reply to anyway.
+        $email = self::nettoye($emailClient);
+        $this->emailClient = null !== $email && mb_strlen($email) <= self::EMAIL_MAX ? $email : null;
         $this->message = trim(self::sansControle($message, multiligne: true));
         $this->projet = self::nettoye($projet);
         $this->surface = self::nettoye($surface);
         $this->support = self::nettoye($support);
-        $this->ville = self::nettoye($ville);
+        $this->ville = self::borne(self::nettoye($ville), self::VILLE_MAX);
         $this->piece = self::nettoye($piece);
         $this->taille = self::nettoye($taille);
         $this->besoin = self::nettoye($besoin);
@@ -113,6 +121,11 @@ final readonly class EnvoiFormulaire
         $motif = $multiligne ? '/(?![\n\t])[\p{Cc}\p{Cf}]/u' : '/[\p{Cc}\p{Cf}]+/u';
 
         return (string) preg_replace($motif, $multiligne ? '' : ' ', $valeur);
+    }
+
+    private static function borne(?string $valeur, int $max): ?string
+    {
+        return null === $valeur ? null : mb_substr($valeur, 0, $max);
     }
 
     private static function obligatoire(string $valeur, string $nom): string

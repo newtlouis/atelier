@@ -225,4 +225,17 @@ final class LecteurDeReponseTest extends TestCase
 
         new LecteurDeReponse()->lit($json);
     }
+
+    /** Found in security review: a city too long for its column. */
+    public function testALongCityIsCutToItsColumn(): void
+    {
+        $json = json_encode([
+            'famille' => 'table', 'nature' => 'projet', 'support' => null,
+            'longueur_mm' => 1600, 'largeur_mm' => 800, 'hauteur_mm' => null,
+            'surface_m2' => null, 'distance_km' => null,
+            'ville_livraison' => str_repeat('é', 130), 'champs_manquants' => ['distance'],
+        ], \JSON_THROW_ON_ERROR);
+
+        self::assertSame(str_repeat('é', 120), new LecteurDeReponse()->lit($json)->villeLivraison);
+    }
 }
