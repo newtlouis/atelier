@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Application;
 
 use App\Devis\Entite\Demande;
-use App\Devis\SourceDesEnvois;
+use App\Devis\Infrastructure\EnvoisNetlify;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -20,7 +20,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 final readonly class ImportDesEnvois
 {
     public function __construct(
-        private SourceDesEnvois $source,
+        private EnvoisNetlify $source,
         private EntityManagerInterface $em,
         private MessageBusInterface $bus,
     ) {}

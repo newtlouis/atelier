@@ -86,6 +86,8 @@ deptrac:
       - Vendor
     Application:
       - Devis
+      # The import reads the Netlify adapter directly: no port, see EnvoisNetlify.
+      - DevisInfrastructure
       - Extraction
       - Shared
       - Vendor

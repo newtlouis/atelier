@@ -9,12 +9,12 @@ use App\Application\ExtraireEtChiffrer;
 use App\Application\ImportDesEnvois;
 use App\Application\ImporterLesEnvoisCommand;
 use App\Devis\Entite\Demande;
-use App\Devis\SourceDesEnvois;
-use App\Shared\Contrat\EnvoiFormulaire;
-use DateTimeImmutable;
+use App\Devis\Infrastructure\EnvoisNetlify;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\JsonMockResponse;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
@@ -37,33 +37,29 @@ final class ImportDesEnvoisTest extends KernelTestCase
         $this->em->getConnection()->executeStatement('TRUNCATE facture, ligne_devis, devis, demande CASCADE');
     }
 
-    private static function envoi(string $id, string $message = '1600*800 mm'): EnvoiFormulaire
+    /**
+     * A submission as the Netlify Forms API returns it, fictitious content.
+     *
+     * @return array<string, mixed>
+     */
+    private static function envoi(string $id, string $message = '1600*800 mm', ?string $email = null, string $projet = 'table-custom'): array
     {
-        return new EnvoiFormulaire(
-            idNetlify: $id,
-            formulaire: 'devis',
-            recuLe: new DateTimeImmutable('2026-09-07'),
-            emailClient: null,
-            message: $message,
-            projet: 'table-custom',
-        );
+        return [
+            'id' => $id,
+            'form_name' => 'devis',
+            'created_at' => '2026-09-07T11:52:22.167Z',
+            'data' => ['project' => $projet, 'message' => $message, 'email' => $email],
+        ];
     }
 
-    private function import(EnvoiFormulaire ...$envois): ImportDesEnvois
+    /** @param array<string, mixed> ...$envois */
+    private function import(array ...$envois): ImportDesEnvois
     {
-        $source = new class (array_values($envois)) implements SourceDesEnvois {
-            /** @param list<EnvoiFormulaire> $envois */
-            public function __construct(private array $envois) {}
-
-            public function envois(): array
-            {
-                return $this->envois;
-            }
-        };
+        $netlify = new EnvoisNetlify(new MockHttpClient(new JsonMockResponse(array_values($envois))), 'jeton', 'site-1');
         $bus = self::getContainer()->get(MessageBusInterface::class);
         self::assertInstanceOf(MessageBusInterface::class, $bus);
 
-        return new ImportDesEnvois($source, $this->em, $bus);
+        return new ImportDesEnvois($netlify, $this->em, $bus);
     }
 
     public function testChaqueEnvoiNouveauDevientUneDemandeMiseEnFile(): void
@@ -91,13 +87,7 @@ final class ImportDesEnvoisTest extends KernelTestCase
 
     public function testUnEnvoiVideEstIgnore(): void
     {
-        $vide = new EnvoiFormulaire(
-            idNetlify: 'v',
-            formulaire: 'devis',
-            recuLe: new DateTimeImmutable(),
-            emailClient: 'x@example.org',
-            message: '  ',
-        );
+        $vide = self::envoi('v', message: '  ', email: 'x@example.org', projet: '');
 
         $bilan = $this->import($vide, self::envoi('a'))->importe();
 

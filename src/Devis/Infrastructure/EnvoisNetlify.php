@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Devis\Infrastructure;
 
-use App\Devis\SourceDesEnvois;
 use App\Shared\Contrat\EnvoiFormulaire;
 use DateTimeImmutable;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -21,7 +20,7 @@ use UnexpectedValueException;
  * Données personnelles : seul l'e-mail est repris. Le nom, le téléphone,
  * l'adresse IP et le navigateur restent dans Netlify.
  */
-final readonly class EnvoisNetlify implements SourceDesEnvois
+final readonly class EnvoisNetlify
 {
     private const string API = 'https://api.netlify.com/api/v1';
     private const int PAR_PAGE = 100;
@@ -33,6 +32,17 @@ final readonly class EnvoisNetlify implements SourceDesEnvois
         private string $idSite,
     ) {}
 
+    /**
+     * The request-for-quote submissions, most recent first. The other forms
+     * (online orders) are left out.
+     *
+     * No interface in front of this class: CLAUDE.md keeps ports for what may
+     * change or cost money, and the Netlify API costs nothing. The webhook that
+     * will replace this pull receives one submission at a time and will call
+     * envoiDepuis(), not envois(). Tests use a MockHttpClient.
+     *
+     * @return list<EnvoiFormulaire>
+     */
     public function envois(): array
     {
         $envois = [];
