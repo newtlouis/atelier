@@ -9,6 +9,7 @@ use App\Shared\Contrat\FamilleProduit;
 use App\Shared\Contrat\IssueDeLecture;
 use App\Shared\Contrat\NatureDemande;
 use App\Shared\Contrat\SupportMur;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -265,6 +266,61 @@ final class DemandeExtraiteTest extends TestCase
         $commande = self::table(sans: 'hauteur', nature: NatureDemande::CommandeCatalogue)->avecHauteurStandard();
 
         self::assertSame(NatureDemande::CommandeCatalogue, $commande->nature);
+    }
+
+    public function testLaDistanceSaisieRendLaDemandeChiffrable(): void
+    {
+        $avant = new DemandeExtraite(
+            famille: FamilleProduit::Mur,
+            longueurMm: 1,
+            largeurMm: 2,
+            hauteurMm: 3,
+            surfaceMetresCarres: 6,
+            distanceKm: null,
+            champsManquants: [' Distance', 'finition'],
+            villeLivraison: 'Colmar',
+            hauteurStandard: true,
+            support: SupportMur::Placo,
+        );
+
+        self::assertEquals(
+            new DemandeExtraite(
+                famille: FamilleProduit::Mur,
+                longueurMm: 1,
+                largeurMm: 2,
+                hauteurMm: 3,
+                surfaceMetresCarres: 6,
+                distanceKm: 75,
+                champsManquants: ['finition'],
+                villeLivraison: 'Colmar',
+                hauteurStandard: true,
+                support: SupportMur::Placo,
+            ),
+            $avant->avecDistance(75),
+        );
+    }
+
+    public function testLaDistanceSaisieCompleteLaVraieDemande(): void
+    {
+        $demande = self::table(sans: 'distance', champsManquants: ['distance'], ville: 'Colmar')->avecDistance(0);
+
+        self::assertSame(0, $demande->distanceKm);
+        self::assertSame(IssueDeLecture::Chiffrable, $demande->issue());
+    }
+
+    public function testUneDistanceNegativeEstRefusee(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        self::table()->avecDistance(-1);
+    }
+
+    public function testLaDistanceGardeLaNature(): void
+    {
+        self::assertSame(
+            NatureDemande::CommandeCatalogue,
+            self::table(nature: NatureDemande::CommandeCatalogue)->avecDistance(10)->nature,
+        );
     }
 
     public function testParDefautUneDemandeEstUnProjet(): void

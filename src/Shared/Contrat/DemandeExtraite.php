@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Shared\Contrat;
 
+use InvalidArgumentException;
+
 /**
  * Ce qu'on a pu tirer d'une demande en texte libre.
  *
@@ -118,6 +120,34 @@ final readonly class DemandeExtraite
             hauteurStandard: $this->hauteurStandard,
             nature: $this->nature,
             support: $support,
+        );
+    }
+
+    /**
+     * La distance saisie par Louis pour une demande qui n'attendait qu'elle.
+     * Ce n'est pas une valeur par défaut : c'est une mesure, faite par un humain.
+     */
+    public function avecDistance(int $distanceKm): self
+    {
+        if ($distanceKm < 0) {
+            throw new InvalidArgumentException("Distance négative : {$distanceKm} km.");
+        }
+
+        return new self(
+            famille: $this->famille,
+            longueurMm: $this->longueurMm,
+            largeurMm: $this->largeurMm,
+            hauteurMm: $this->hauteurMm,
+            surfaceMetresCarres: $this->surfaceMetresCarres,
+            distanceKm: $distanceKm,
+            champsManquants: array_values(array_filter(
+                $this->champsManquants,
+                static fn(string $champ): bool => 'distance' !== strtolower(trim($champ)),
+            )),
+            villeLivraison: $this->villeLivraison,
+            hauteurStandard: $this->hauteurStandard,
+            nature: $this->nature,
+            support: $this->support,
         );
     }
 
