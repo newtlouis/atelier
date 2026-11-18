@@ -46,7 +46,10 @@ final readonly class Aiguillage
      */
     public function lit(EnvoiFormulaire $envoi): DemandeExtraite
     {
-        return $this->lecture($envoi)->avecSupport(self::supportDuFormulaire($envoi->support));
+        // The distance is always Louis's measurement, never the client's claim.
+        return $this->lecture($envoi)
+            ->avecSupport(self::supportDuFormulaire($envoi->support))
+            ->sansDistance();
     }
 
     /**

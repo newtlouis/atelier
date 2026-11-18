@@ -352,6 +352,22 @@ final class DemandeExtraiteTest extends TestCase
         self::assertSame(IssueDeLecture::Chiffrable, $demande->issue());
     }
 
+    public function testForgettingTheClientsDistanceWaitsForLouis(): void
+    {
+        $demande = self::table(champsManquants: ['Distance_km', 'finition'], ville: 'Colmar')->sansDistance();
+
+        self::assertNull($demande->distanceKm);
+        self::assertSame(['finition', 'distance'], $demande->champsManquants);
+        self::assertSame(1_200, $demande->longueurMm);
+    }
+
+    public function testWithoutADistanceThereIsNothingToForget(): void
+    {
+        $demande = self::table(sans: 'distance', champsManquants: ['distance']);
+
+        self::assertSame($demande, $demande->sansDistance());
+    }
+
     public function testUneDistanceNegativeEstRefusee(): void
     {
         $this->expectException(InvalidArgumentException::class);

@@ -129,6 +129,26 @@ final readonly class DemandeExtraite
     }
 
     /**
+     * Forgets a distance read from the client's own words. The fee for the
+     * trip is money: it rests on kilometres Louis measured, never on "I'm
+     * 5 km away" typed in a public form and copied by the model.
+     */
+    public function sansDistance(): self
+    {
+        if (null === $this->distanceKm) {
+            return $this;
+        }
+
+        return $this->variante(
+            hauteurMm: $this->hauteurMm,
+            hauteurStandard: $this->hauteurStandard,
+            support: $this->support,
+            distanceKm: null,
+            champsManquants: [...$this->sansManquant('distance'), 'distance'],
+        );
+    }
+
+    /**
      * La suite à donner. Une demande où seuls les kilomètres manquent n'est pas
      * une question au client quand la ville est connue : Louis les calcule.
      */

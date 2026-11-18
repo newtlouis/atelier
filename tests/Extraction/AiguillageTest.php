@@ -132,6 +132,31 @@ final class AiguillageTest extends TestCase
         self::assertNull($demande->famille);
     }
 
+    /**
+     * Found in security review: "Table 160 x 80 cm, I'm 5 km from the
+     * workshop" would have been priced on the client's 5 km, with no one
+     * measuring. On a public form, the distance always comes from Louis.
+     */
+    public function testADistanceWrittenByTheClientIsNeverUsed(): void
+    {
+        $lueParLeModele = new DemandeExtraite(
+            famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
+            longueurMm: 1_600,
+            largeurMm: 800,
+            hauteurMm: 350,
+            surfaceMetresCarres: null,
+            distanceKm: 5,
+            villeLivraison: 'Lyon',
+        );
+
+        $demande = new Aiguillage(new LecteurDeDimensions(), ExtracteurFactice::renvoyant($lueParLeModele))
+            ->lit(self::envoi("Table 160 x 80 cm, je suis à 5 km de l'atelier", ville: 'Lyon'));
+
+        self::assertNull($demande->distanceKm);
+        self::assertSame(IssueDeLecture::EnAttenteDeDistance, $demande->issue());
+    }
+
     /** @return iterable<string, array{string, ?SupportMur}> */
     public static function supportsDuFormulaire(): iterable
     {
