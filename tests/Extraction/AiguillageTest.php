@@ -41,6 +41,7 @@ final class AiguillageTest extends TestCase
     {
         return new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_400,
             largeurMm: 700,
             hauteurMm: 380,
@@ -60,6 +61,7 @@ final class AiguillageTest extends TestCase
         self::assertEquals(
             new DemandeExtraite(
                 famille: FamilleProduit::Table,
+                nature: NatureDemande::Projet,
                 longueurMm: 1_600,
                 largeurMm: 800,
                 hauteurMm: null,
@@ -133,6 +135,7 @@ final class AiguillageTest extends TestCase
     {
         $murSansSupport = new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,

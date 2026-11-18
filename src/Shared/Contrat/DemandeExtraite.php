@@ -32,6 +32,9 @@ final readonly class DemandeExtraite
      */
     public function __construct(
         public ?FamilleProduit $famille,
+        // No default: a forgotten nature must never turn into a project,
+        // that is, into a request that gets quoted.
+        public NatureDemande $nature,
         public ?int $longueurMm,
         public ?int $largeurMm,
         public ?int $hauteurMm,
@@ -40,7 +43,6 @@ final readonly class DemandeExtraite
         public array $champsManquants = [],
         public ?string $villeLivraison = null,
         public bool $hauteurStandard = false,
-        public NatureDemande $nature = NatureDemande::Projet,
         public ?SupportMur $support = null,
     ) {}
 

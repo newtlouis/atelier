@@ -10,6 +10,7 @@ use App\Devis\Chiffrage\ChiffreurTable;
 use App\Devis\Chiffrage\DemandeIncomplete;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\NatureDemande;
 use App\Shared\Contrat\SupportMur;
 use PHPUnit\Framework\TestCase;
 
@@ -22,6 +23,7 @@ final class ChiffreurDeDemandeTest extends TestCase
     {
         $chiffrage = $this->chiffreur()->chiffre(new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: 350,
@@ -38,6 +40,7 @@ final class ChiffreurDeDemandeTest extends TestCase
         // « 1600*800 mm », hauteur standard ; la distance saisie par Louis.
         $demande = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_600,
             largeurMm: 800,
             hauteurMm: null,
@@ -57,6 +60,7 @@ final class ChiffreurDeDemandeTest extends TestCase
     {
         $chiffrage = $this->chiffreur()->chiffre(new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -74,6 +78,7 @@ final class ChiffreurDeDemandeTest extends TestCase
     {
         $chiffrage = $this->chiffreur()->chiffre(new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -91,6 +96,7 @@ final class ChiffreurDeDemandeTest extends TestCase
 
         $this->chiffreur()->chiffre(new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -107,6 +113,7 @@ final class ChiffreurDeDemandeTest extends TestCase
 
         $this->chiffreur()->chiffre(new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: null,
@@ -124,6 +131,7 @@ final class ChiffreurDeDemandeTest extends TestCase
 
         $this->chiffreur()->chiffre(new DemandeExtraite(
             famille: null,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,

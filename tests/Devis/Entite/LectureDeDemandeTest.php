@@ -39,6 +39,7 @@ final class LectureDeDemandeTest extends TestCase
         $demande = new Demande('Un mur.');
         $lue = new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,

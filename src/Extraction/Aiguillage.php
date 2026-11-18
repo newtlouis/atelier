@@ -75,6 +75,7 @@ final readonly class Aiguillage
         // ville, et c'est Louis qui saisit les kilomètres.
         return new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: $dimensions->longueurMm,
             largeurMm: $dimensions->largeurMm,
             hauteurMm: $dimensions->hauteurMm,

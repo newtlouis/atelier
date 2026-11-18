@@ -63,6 +63,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         $demande = new DemandeExtraite(
             famille: null,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: 350,
@@ -120,6 +121,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         $demande = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_600,
             largeurMm: 800,
             hauteurMm: null,
@@ -132,6 +134,7 @@ final class DemandeExtraiteTest extends TestCase
         self::assertEquals(
             new DemandeExtraite(
                 famille: FamilleProduit::Table,
+                nature: NatureDemande::Projet,
                 longueurMm: 1_600,
                 largeurMm: 800,
                 hauteurMm: 350,
@@ -149,6 +152,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         $demande = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: 420,
@@ -168,6 +172,7 @@ final class DemandeExtraiteTest extends TestCase
         $mur = self::mur(sans: 'surface', champsManquants: ['surface']);
         $inconnue = new DemandeExtraite(
             famille: null,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -230,6 +235,7 @@ final class DemandeExtraiteTest extends TestCase
         // La largeur manque sans que le modèle l'ait dit : ce n'est pas qu'une distance.
         $demande = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: null,
             hauteurMm: 350,
@@ -291,6 +297,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         $avant = new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: 1,
             largeurMm: 2,
             hauteurMm: 3,
@@ -305,6 +312,7 @@ final class DemandeExtraiteTest extends TestCase
         self::assertEquals(
             new DemandeExtraite(
                 famille: FamilleProduit::Mur,
+                nature: NatureDemande::Projet,
                 longueurMm: 1,
                 largeurMm: 2,
                 hauteurMm: 3,
@@ -340,11 +348,6 @@ final class DemandeExtraiteTest extends TestCase
             NatureDemande::CommandeCatalogue,
             self::table(nature: NatureDemande::CommandeCatalogue)->avecDistance(10)->nature,
         );
-    }
-
-    public function testParDefautUneDemandeEstUnProjet(): void
-    {
-        self::assertSame(NatureDemande::Projet, self::table()->nature);
     }
 
     /** @param list<string> $champsManquants */
@@ -398,6 +401,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         $mur = new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -416,6 +420,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         $table = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: 350,
@@ -431,6 +436,7 @@ final class DemandeExtraiteTest extends TestCase
     {
         $demande = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: null,
@@ -514,6 +520,7 @@ final class DemandeExtraiteTest extends TestCase
     ): DemandeExtraite {
         return new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,

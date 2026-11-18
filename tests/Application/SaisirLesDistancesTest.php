@@ -17,6 +17,7 @@ use App\Devis\Entite\LectureDeDemande;
 use App\Devis\Entite\LectureRepository;
 use App\Shared\Contrat\DemandeExtraite;
 use App\Shared\Contrat\FamilleProduit;
+use App\Shared\Contrat\NatureDemande;
 use App\Shared\Contrat\SupportMur;
 use App\Tests\Devis\Chiffrage\BaremeDeReference;
 use DateTimeImmutable;
@@ -43,6 +44,7 @@ final class SaisirLesDistancesTest extends KernelTestCase
     {
         return $this->lue(new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_600,
             largeurMm: 800,
             hauteurMm: 350,
@@ -150,6 +152,7 @@ final class SaisirLesDistancesTest extends KernelTestCase
     {
         $this->lue(new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -170,6 +173,7 @@ final class SaisirLesDistancesTest extends KernelTestCase
     {
         $this->lue(new DemandeExtraite(
             famille: FamilleProduit::Mur,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -191,6 +195,7 @@ final class SaisirLesDistancesTest extends KernelTestCase
     {
         $this->lue(new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 800,
             largeurMm: 500,
             hauteurMm: 350,

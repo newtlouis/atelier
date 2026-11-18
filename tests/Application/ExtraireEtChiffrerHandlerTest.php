@@ -90,6 +90,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
 
         $incomplete = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: null,
             largeurMm: null,
             hauteurMm: null,
@@ -132,6 +133,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
         $demande = $this->demandePersistee('Une table basse 120 × 60, livrée à 100 km.');
         $sansHauteur = new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: null,
@@ -243,6 +245,7 @@ final class ExtraireEtChiffrerHandlerTest extends KernelTestCase
     {
         return new DemandeExtraite(
             famille: FamilleProduit::Table,
+            nature: NatureDemande::Projet,
             longueurMm: 1_200,
             largeurMm: 600,
             hauteurMm: 350,
