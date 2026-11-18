@@ -8,10 +8,23 @@ deptrac:
   paths:
     - ./src
   layers:
+    # Devis is split the same way as Extraction below: the domain on one side,
+    # the adapters that name an external service (the Netlify Forms API) on the
+    # other. Without this, Devis/Chiffrage could call the HTTP client and no
+    # check would notice.
     - name: Devis
       collectors:
+        - type: bool
+          must:
+            - type: directory
+              value: src/Devis/.*
+          must_not:
+            - type: directory
+              value: src/Devis/Infrastructure/.*
+    - name: DevisInfrastructure
+      collectors:
         - type: directory
-          value: src/Devis/.*
+          value: src/Devis/Infrastructure/.*
     # Le domaine Extraction est coupé en deux, et c'est le cœur de l'affaire :
     # l'interface `Extracteur` et le suivi des coûts d'un côté, l'adaptateur
     # Anthropic de l'autre. La règle ci-dessous interdit au premier de connaître
@@ -58,6 +71,11 @@ deptrac:
     Extraction:
       - Shared
       - Vendor
+    # The adapter knows the domain, never the other way round.
+    DevisInfrastructure:
+      - Devis
+      - Shared
+      - Vendor
     # L'adaptateur connaît le port, jamais l'inverse. C'est la seule couche
     # autorisée à nommer le SDK Anthropic ou Doctrine pour ce domaine.
     ExtractionInfrastructure:
@@ -74,6 +92,7 @@ deptrac:
     Kernel:
       - Application
       - Devis
+      - DevisInfrastructure
       - Extraction
       - Shared
       - Vendor
