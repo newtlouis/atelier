@@ -64,22 +64,13 @@ final readonly class DemandeExtraite
             return $this;
         }
 
-        return new self(
-            famille: $this->famille,
-            longueurMm: $this->longueurMm,
-            largeurMm: $this->largeurMm,
+        return $this->variante(
             hauteurMm: self::HAUTEUR_STANDARD_TABLE_BASSE_MM,
-            surfaceMetresCarres: $this->surfaceMetresCarres,
-            distanceKm: $this->distanceKm,
-            champsManquants: array_values(array_filter(
-                $this->champsManquants,
-                // Le modèle nomme le champ « hauteur » ou « hauteur_mm ».
-                static fn(string $champ): bool => !str_starts_with(strtolower(trim($champ)), 'hauteur'),
-            )),
-            villeLivraison: $this->villeLivraison,
             hauteurStandard: true,
-            nature: $this->nature,
             support: $this->support,
+            distanceKm: $this->distanceKm,
+            // The model names the field "hauteur" or "hauteur_mm".
+            champsManquants: $this->sansManquant('hauteur'),
         );
     }
 
@@ -109,21 +100,12 @@ final readonly class DemandeExtraite
             return $this;
         }
 
-        return new self(
-            famille: $this->famille,
-            longueurMm: $this->longueurMm,
-            largeurMm: $this->largeurMm,
+        return $this->variante(
             hauteurMm: $this->hauteurMm,
-            surfaceMetresCarres: $this->surfaceMetresCarres,
-            distanceKm: $this->distanceKm,
-            champsManquants: array_values(array_filter(
-                $this->champsManquants,
-                static fn(string $champ): bool => !str_starts_with(strtolower(trim($champ)), 'support'),
-            )),
-            villeLivraison: $this->villeLivraison,
             hauteurStandard: $this->hauteurStandard,
-            nature: $this->nature,
             support: $support,
+            distanceKm: $this->distanceKm,
+            champsManquants: $this->sansManquant('support'),
         );
     }
 
@@ -137,21 +119,12 @@ final readonly class DemandeExtraite
             throw new InvalidArgumentException("Distance négative : {$distanceKm} km.");
         }
 
-        return new self(
-            famille: $this->famille,
-            longueurMm: $this->longueurMm,
-            largeurMm: $this->largeurMm,
+        return $this->variante(
             hauteurMm: $this->hauteurMm,
-            surfaceMetresCarres: $this->surfaceMetresCarres,
-            distanceKm: $distanceKm,
-            champsManquants: array_values(array_filter(
-                $this->champsManquants,
-                static fn(string $champ): bool => 'distance' !== strtolower(trim($champ)),
-            )),
-            villeLivraison: $this->villeLivraison,
             hauteurStandard: $this->hauteurStandard,
-            nature: $this->nature,
             support: $this->support,
+            distanceKm: $distanceKm,
+            champsManquants: $this->sansManquant('distance'),
         );
     }
 
@@ -186,7 +159,7 @@ final readonly class DemandeExtraite
 
         $manquants = [];
         foreach ($this->champsManquants as $champ) {
-            if ('distance' !== strtolower(trim($champ))) {
+            if (!self::nomme($champ, 'distance')) {
                 $manquants[] = $champ;
             } elseif (null === $this->villeLivraison) {
                 $manquants[] = 'ville de livraison';
@@ -206,13 +179,59 @@ final readonly class DemandeExtraite
             return false;
         }
 
-        foreach ($this->champsManquants as $champ) {
-            if ('distance' !== strtolower(trim($champ))) {
-                return false;
-            }
+        if ([] !== $this->sansManquant('distance')) {
+            return false;
         }
 
         return $this->donneesCompletesHorsDistance();
+    }
+
+    /**
+     * The only place that copies the contract. The three avec…() methods vary
+     * these five fields; everything else is carried over, nature included, so
+     * a copy can never turn spam into a project.
+     *
+     * @param list<string> $champsManquants
+     */
+    private function variante(
+        ?int $hauteurMm,
+        bool $hauteurStandard,
+        ?SupportMur $support,
+        ?int $distanceKm,
+        array $champsManquants,
+    ): self {
+        return new self(
+            famille: $this->famille,
+            nature: $this->nature,
+            longueurMm: $this->longueurMm,
+            largeurMm: $this->largeurMm,
+            hauteurMm: $hauteurMm,
+            surfaceMetresCarres: $this->surfaceMetresCarres,
+            distanceKm: $distanceKm,
+            champsManquants: $champsManquants,
+            villeLivraison: $this->villeLivraison,
+            hauteurStandard: $hauteurStandard,
+            support: $support,
+        );
+    }
+
+    /**
+     * The missing fields, minus the one named. The model's wording varies
+     * ("distance", "distance_km", " Hauteur"): one rule for all three fields.
+     *
+     * @return list<string>
+     */
+    private function sansManquant(string $nom): array
+    {
+        return array_values(array_filter(
+            $this->champsManquants,
+            static fn(string $champ): bool => !self::nomme($champ, $nom),
+        ));
+    }
+
+    private static function nomme(string $champ, string $nom): bool
+    {
+        return str_starts_with(strtolower(trim($champ)), $nom);
     }
 
     /** Ce que la famille exige, la distance mise à part. */

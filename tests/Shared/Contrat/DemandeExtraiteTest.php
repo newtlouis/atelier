@@ -207,6 +207,23 @@ final class DemandeExtraiteTest extends TestCase
         self::assertSame('', $demande->questionsAPoser());
     }
 
+    /** The model sometimes names the field after the schema key. */
+    public function testDistanceKmCountsAsTheDistance(): void
+    {
+        $demande = self::table(sans: 'distance', champsManquants: ['distance_km'], ville: 'Colmar');
+
+        self::assertSame(IssueDeLecture::EnAttenteDeDistance, $demande->issue());
+        self::assertSame([], $demande->avecDistance(40)->champsManquants);
+    }
+
+    public function testDistanceKmWithoutACityAsksForTheCity(): void
+    {
+        self::assertSame(
+            'Il manque : ville de livraison.',
+            self::table(sans: 'distance', champsManquants: ['distance_km'])->questionsAPoser(),
+        );
+    }
+
     public function testSansKilometresNiVilleLaQuestionVaAuClient(): void
     {
         // La vraie demande du 07/09/2026 : dimensions seules, ni distance ni ville.
