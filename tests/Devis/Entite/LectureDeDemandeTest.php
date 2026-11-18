@@ -31,7 +31,7 @@ final class LectureDeDemandeTest extends TestCase
             support: SupportMur::Tapisserie,
         );
 
-        self::assertEquals($lue, LectureDeDemande::de(Demande::depuisTexte('Un mur.'), $lue)->demandeExtraite());
+        self::assertEquals($lue, LectureDeDemande::depuis(Demande::depuisTexte('Un mur.'), $lue)->demandeExtraite());
     }
 
     public function testLIssueEstFigeeAuMomentDeLaLecture(): void
@@ -48,7 +48,7 @@ final class LectureDeDemandeTest extends TestCase
             support: SupportMur::Bois,
         );
 
-        $lecture = LectureDeDemande::de($demande, $lue);
+        $lecture = LectureDeDemande::depuis($demande, $lue);
 
         self::assertSame(IssueDeLecture::Irrealisable, $lecture->issue);
         self::assertSame($demande, $lecture->demande);

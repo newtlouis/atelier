@@ -67,7 +67,7 @@ final class SaisirLesDistancesTest extends KernelTestCase
             emailClient: null,
             message: '1600*800 mm',
         ));
-        $lecture = LectureDeDemande::de($demande, $extraite);
+        $lecture = LectureDeDemande::depuis($demande, $extraite);
         $this->em->persist($demande);
         $this->em->persist($lecture);
         $this->em->flush();

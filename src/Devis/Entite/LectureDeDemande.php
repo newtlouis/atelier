@@ -66,7 +66,7 @@ class LectureDeDemande
         public readonly DateTimeImmutable $lueLe,
     ) {}
 
-    public static function de(Demande $demande, DemandeExtraite $lue): self
+    public static function depuis(Demande $demande, DemandeExtraite $lue): self
     {
         return new self(
             id: Uuid::v7(),

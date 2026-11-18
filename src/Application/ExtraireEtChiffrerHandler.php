@@ -124,7 +124,7 @@ final readonly class ExtraireEtChiffrerHandler
             : $this->extracteur->extrait($demande->texteClient)
         )->avecHauteurStandard();
 
-        $lecture = LectureDeDemande::de($demande, $extraite);
+        $lecture = LectureDeDemande::depuis($demande, $extraite);
         $this->em->persist($lecture);
         $this->em->flush();
 
